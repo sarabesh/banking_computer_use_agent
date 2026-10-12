@@ -1,0 +1,20 @@
+{% extends "work_base.html" %}
+{% block body %}
+<table class="t1" width="100%" cellspacing="0"><tr><td class="h">{{ L.open_title }} &mdash; {{ m.member_no }} {{ m.last_name|upper }}, {{ m.first_name|upper }}</td></tr></table>
+<br>
+{% if error %}<span class="e">{{ error }}</span><br><br>{% endif %}
+<form method="post" action="/w/member/{{ m.member_no }}/open">
+<table class="t1" cellspacing="0">
+<tr><td align="right">{{ L.share_type }}:</td><td>
+<select name="f1">
+<option value="">-- select --</option>
+{% for code, (desc, minimum) in share_types.items() %}
+<option value="{{ code }}" {% if form.f1 == code %}selected{% endif %}>{{ code }} - {{ desc }}</option>
+{% endfor %}
+</select></td></tr>
+<tr><td align="right">{{ L.nickname }}:</td><td><input type="text" name="f2" size="22" value="{{ form.f2 }}"> <font size="1">(optional)</font></td></tr>
+<tr><td align="right">{{ L.deposit }}:</td><td>$ <input type="text" name="f3" size="12" value="{{ form.f3 }}"></td></tr>
+<tr><td></td><td><input type="submit" value="{{ L.continue }}"> &nbsp; <a href="/w/member/{{ m.member_no }}">{{ L.cancel }}</a></td></tr>
+</table>
+</form>
+{% endblock %}

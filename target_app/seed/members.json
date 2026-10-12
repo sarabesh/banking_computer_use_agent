@@ -1,0 +1,66 @@
+[
+  {
+    "member_no": "12345",
+    "first_name": "Avery",
+    "last_name": "Quinn",
+    "ssn": "900-12-3456",
+    "dob": "03/17/1984",
+    "address": "41 Elm St, Springfield",
+    "status": "ACTIVE",
+    "accounts": [
+      {"suffix": "0000", "type": "SHARE", "description": "Regular Savings", "balance": "1523.47", "available": "1498.47"},
+      {"suffix": "0001", "type": "DRAFT", "description": "Share Draft Checking", "balance": "842.10", "available": "842.10"},
+      {"suffix": "0002", "type": "CERT", "description": "12 Mo Certificate", "balance": "5000.00", "available": "0.00"}
+    ]
+  },
+  {
+    "member_no": "13579",
+    "first_name": "Morgan",
+    "last_name": "Quinn",
+    "ssn": "900-55-1020",
+    "dob": "11/02/1979",
+    "address": "7 Harbor Rd, Shelbyville",
+    "status": "ACTIVE",
+    "accounts": [
+      {"suffix": "0000", "type": "SHARE", "description": "Regular Savings", "balance": "310.00", "available": "310.00"}
+    ]
+  },
+  {
+    "member_no": "24680",
+    "first_name": "Jordan",
+    "last_name": "Patel",
+    "ssn": "900-31-7788",
+    "dob": "06/30/1991",
+    "address": "1200 Ridge Ave, Springfield",
+    "status": "ACTIVE",
+    "accounts": [
+      {"suffix": "0000", "type": "SHARE", "description": "Regular Savings", "balance": "12890.05", "available": "12890.05"},
+      {"suffix": "0001", "type": "DRAFT", "description": "Share Draft Checking", "balance": "2210.66", "available": "2010.66"}
+    ]
+  },
+  {
+    "member_no": "30001",
+    "first_name": "Casey",
+    "last_name": "Rivera",
+    "ssn": "900-73-4410",
+    "dob": "09/09/1966",
+    "address": "88 Mill Ln, Ogdenville",
+    "status": "RESTRICTED",
+    "accounts": [
+      {"suffix": "0000", "type": "SHARE", "description": "Regular Savings", "balance": "25.00", "available": "0.00"}
+    ]
+  },
+  {
+    "member_no": "55555",
+    "first_name": "Riley",
+    "last_name": "Chen",
+    "ssn": "900-08-2231",
+    "dob": "01/25/2001",
+    "address": "3 Birch Ct, Capital City",
+    "status": "ACTIVE",
+    "accounts": [
+      {"suffix": "0000", "type": "SHARE", "description": "Regular Savings", "balance": "75.12", "available": "75.12"},
+      {"suffix": "0003", "type": "SHARE", "description": "Holiday Club", "balance": "400.00", "available": "400.00"}
+    ]
+  }
+]

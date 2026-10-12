@@ -1,0 +1,8 @@
+{% extends "work_base.html" %}
+{% block body %}
+<table class="t1" width="100%" cellspacing="0"><tr><td class="h">{{ L.done_title }}</td></tr></table>
+<br>
+Share <b>{{ suffix }}</b> has been added to member {{ m.member_no }}.<br><br>
+Confirmation #: <b>{{ confirmation }}</b><br><br>
+<a href="/w/member/{{ m.member_no }}">{{ L.back }}</a> &nbsp; <a href="/w/search">{{ L.new_search }}</a>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "work_base.html" %}
+{% block body %}
+<table class="t1" width="100%" cellspacing="0"><tr><td class="h">{{ L.search_title }}</td></tr></table>
+<br>
+{% if error %}<span class="e">{{ error }}</span><br><br>{% endif %}
+<form method="get" action="/w/results">
+<table class="t1" cellspacing="0">
+<tr><td align="right">{{ L.member_no }}:</td><td><input type="text" name="q1" size="10" maxlength="10" value="{{ q1 }}"></td></tr>
+<tr><td align="right">{{ L.last_name }}:</td><td><input type="text" name="q2" size="22" value="{{ q2 }}"></td></tr>
+<tr><td></td><td><input type="submit" value="{{ L.search_button }}"></td></tr>
+</table>
+</form>
+{% endblock %}

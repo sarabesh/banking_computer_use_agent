@@ -1,0 +1,27 @@
+<html>
+<head>
+<title>{{ T.product }}</title>
+<style>
+body { font-family: Tahoma, Verdana, sans-serif; font-size: 12px; background: #ece9d8; margin: 6px; }
+table { font-size: 12px; }
+.t1 td { padding: 3px 8px; }
+.h { background: {{ T.theme.bar }}; color: #fff; font-weight: bold; }
+.r0 { background: #ffffff; } .r1 { background: #f1f1f1; }
+.e { color: #cc0000; font-weight: bold; }
+.b1 { display: inline-block; border: 2px outset #ccc; background: #ddd; padding: 2px 12px; cursor: pointer; }
+.x9 { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.45); }
+.x9 > div { background: #ffffe0; width: 420px; margin: 90px auto; border: 2px solid #000; padding: 10px; }
+</style>
+</head>
+<body>
+{% block body %}{% endblock %}
+{% if notice %}
+<div class="x9"><div>
+<b>SYSTEM NOTICE</b><br><br>
+Core processing will be unavailable Sunday 02:00&ndash;04:00 ET for scheduled maintenance.
+Transactions posted during this window will be queued.<br><br>
+<center><input type="button" value="Acknowledge" onclick="this.parentNode.parentNode.parentNode.remove()"></center>
+</div></div>
+{% endif %}
+</body>
+</html>

@@ -1,0 +1,23 @@
+<html>
+<head><title>{{ T.product }} - {{ L.sign_on_title }}</title></head>
+<body bgcolor="#ece9d8" style="font-family: Tahoma, Verdana, sans-serif; font-size: 12px">
+<br><br>
+<center>
+<table width="380" cellspacing="0" cellpadding="0" border="1" bordercolor="#888888">
+<tr><td bgcolor="{{ T.theme.bar }}" style="padding:6px"><font color="#ffffff"><b>{{ T.institution }}</b><br>{{ T.product }} {{ T.product_version }}</font></td></tr>
+<tr><td style="padding:12px" bgcolor="#ffffff">
+<b>{{ L.sign_on_title }}</b><br><br>
+{% if error %}<font color="#cc0000"><b>{{ error }}</b></font><br><br>{% endif %}
+<form method="post" action="/login">
+<table cellspacing="0" cellpadding="4">
+<tr><td align="right">{{ L.user_id }}:</td><td><input type="text" name="u" size="18" autocomplete="off"></td></tr>
+<tr><td align="right">{{ L.password }}:</td><td><input type="password" name="p" size="18"></td></tr>
+<tr><td></td><td><input type="submit" value="{{ L.sign_on }}"></td></tr>
+</table>
+</form>
+<font size="1" color="#666666">Authorized use only. All activity is monitored.</font>
+</td></tr>
+</table>
+</center>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{% extends "work_base.html" %}
+{% block body %}
+<table class="t1" width="100%" cellspacing="0"><tr><td class="h">{{ L.review_title }}</td></tr></table>
+<br>
+<b>Please verify the following before posting. This action cannot be reversed.</b><br><br>
+<table class="t1" cellspacing="0" border="1" bordercolor="#999999">
+<tr><td bgcolor="#d4d0c8"><b>{{ L.member_no }}</b></td><td>{{ m.member_no }}</td></tr>
+<tr><td bgcolor="#d4d0c8"><b>{{ L.name }}</b></td><td>{{ m.first_name }} {{ m.last_name }}</td></tr>
+<tr><td bgcolor="#d4d0c8"><b>{{ L.share_type }}</b></td><td>{{ p.type }} - {{ type_desc }}</td></tr>
+<tr><td bgcolor="#d4d0c8"><b>{{ L.nickname }}</b></td><td>{{ p.nickname or '(none)' }}</td></tr>
+<tr><td bgcolor="#d4d0c8"><b>{{ L.deposit }}</b></td><td>{{ deposit }}</td></tr>
+</table>
+<br>
+<form method="post" action="/w/member/{{ m.member_no }}/open/confirm"
+{% if confirm_dialog %} onsubmit="return confirm('Post new share to member account? This cannot be undone.')"{% endif %}>
+<input type="submit" value="{{ L.confirm }}"> &nbsp; <a href="/w/member/{{ m.member_no }}/open">{{ L.back }}</a>
+</form>
+{% endblock %}

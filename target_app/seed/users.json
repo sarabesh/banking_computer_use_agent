@@ -1,0 +1,4 @@
+[
+  {"user_id": "officer1", "password": "demo-officer-pw", "role": "officer", "display": "M. Officer"},
+  {"user_id": "teller1", "password": "demo-teller-pw", "role": "teller_ro", "display": "T. Teller (read-only)"}
+]

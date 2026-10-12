@@ -1,0 +1,23 @@
+{% extends "work_base.html" %}
+{% block body %}
+<table class="t1" width="100%" cellspacing="0"><tr><td class="h">{{ L.results_title }}</td></tr></table>
+<br>
+{% if not rows %}
+<span class="e">{{ L.no_results }}</span><br><br>
+<a href="/w/search">{{ L.new_search }}</a>
+{% else %}
+<table class="t1" cellspacing="0" border="1" bordercolor="#999999">
+<tr bgcolor="#d4d0c8"><td><b>{{ L.member_no }}</b></td><td><b>{{ L.name }}</b></td><td><b>{{ L.city }}</b></td><td><b>{{ L.status }}</b></td><td>&nbsp;</td></tr>
+{% for m in rows %}
+<tr class="r{{ loop.index0 % 2 }}">
+<td>{{ m.member_no }}</td>
+<td>{{ m.last_name|upper }}, {{ m.first_name|upper }}</td>
+<td>{{ m.address.split(', ')[-1] }}</td>
+<td>{{ m.status }}</td>
+<td><a href="/w/member/{{ m.member_no }}">{{ L.select }}</a></td>
+</tr>
+{% endfor %}
+</table>
+<br>{{ rows|length }} record(s) found. &nbsp; <a href="/w/search">{{ L.new_search }}</a>
+{% endif %}
+{% endblock %}

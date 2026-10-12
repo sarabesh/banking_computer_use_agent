@@ -1,0 +1,7 @@
+{% extends "work_base.html" %}
+{% block body %}
+<table class="t1" width="100%" cellspacing="0"><tr><td class="h">{{ title }}</td></tr></table>
+<br>
+<span class="e">{% if code %}{{ code }} {% endif %}{{ text }}</span><br><br>
+{% if link %}<a href="{{ link }}"{% if target %} target="{{ target }}"{% endif %}>{{ link_text }}</a>{% endif %}
+{% endblock %}
