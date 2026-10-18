@@ -1,0 +1,14 @@
+{"seq": 1, "ts": "2026-10-18T18:41:26.945+00:00", "type": "replay_started", "capability": "member_savings_balance", "version": "0.2.0", "content_hash": "sha256:dbd70803fe1be22e60749ceb4a8a86fc6f7379df6b4bfa15abeceb984fbb8a5d", "status": "draft", "allow_draft": true, "base_url": "http://127.0.0.1:63731", "inputs": {"member_number": "12345"}}
+{"seq": 2, "ts": "2026-10-18T18:41:26.946+00:00", "type": "supervised_run", "reason": "draft capability replayed with --allow-draft"}
+{"seq": 3, "ts": "2026-10-18T18:41:27.911+00:00", "type": "step_started", "step": "fill_teller_user", "action": "fill_secret", "approved_by": null}
+{"seq": 4, "ts": "2026-10-18T18:41:28.356+00:00", "type": "step_ok", "step": "fill_teller_user", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 444}
+{"seq": 5, "ts": "2026-10-18T18:41:28.356+00:00", "type": "step_started", "step": "fill_teller_password", "action": "fill_secret", "approved_by": null}
+{"seq": 6, "ts": "2026-10-18T18:41:28.748+00:00", "type": "step_ok", "step": "fill_teller_password", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 391}
+{"seq": 7, "ts": "2026-10-18T18:41:28.748+00:00", "type": "step_started", "step": "click_sign_on", "action": "click", "approved_by": null}
+{"seq": 8, "ts": "2026-10-18T18:41:29.378+00:00", "type": "outcome_detected", "code": "app_error", "kind": "recoverable", "step": "click_sign_on", "frame": "work"}
+{"seq": 9, "ts": "2026-10-18T18:41:29.569+00:00", "type": "recovered", "code": "app_error", "action": "reload", "attempt": 1, "step": "click_sign_on"}
+{"seq": 10, "ts": "2026-10-18T18:41:29.744+00:00", "type": "outcome_detected", "code": "app_error", "kind": "recoverable", "step": "click_sign_on", "frame": "work"}
+{"seq": 11, "ts": "2026-10-18T18:41:29.944+00:00", "type": "recovered", "code": "app_error", "action": "reload", "attempt": 2, "step": "click_sign_on"}
+{"seq": 12, "ts": "2026-10-18T18:41:30.120+00:00", "type": "outcome_detected", "code": "app_error", "kind": "recoverable", "step": "click_sign_on", "frame": "work"}
+{"seq": 13, "ts": "2026-10-18T18:41:30.190+00:00", "type": "replay_error", "kind": "recovery_exhausted", "message": "'app_error' persisted after 2 recoveries", "step": "click_sign_on", "expected": null, "observed": "Server Error in '/CoreLine' Application.", "screenshot": "failure-click_sign_on.jpg", "snapshot": "failure-click_sign_on.txt"}
+{"seq": 14, "ts": "2026-10-18T18:41:30.240+00:00", "type": "replay_finished", "status": "failed", "outcome": "app_error", "error": {"kind": "recovery_exhausted", "message": "'app_error' persisted after 2 recoveries", "step": "click_sign_on", "expected": null, "observed": "Server Error in '/CoreLine' Application.", "screenshot": "failure-click_sign_on.jpg", "snapshot": "failure-click_sign_on.txt"}, "escalate": true, "duration_ms": 3293}

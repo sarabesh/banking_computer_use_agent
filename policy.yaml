@@ -1,0 +1,64 @@
+# Safety policy for the automation. Enforced in code, outside the LLM: the model cannot
+# talk its way past it. Loaded by cua.policy.Policy.
+
+# Every request the browser makes (navigation, frames, assets) must target one of these origins. Will be actual hostnames in production, localhost for local development. The model cannot override this.
+allowed_origins:
+  - http://127.0.0.1:5001
+  - http://127.0.0.1:5002
+  - http://localhost:5001
+  - http://localhost:5002
+
+# Paths that are never reachable, even on an allowed origin.
+# /__control is the mock app's fault-injection harness: not part of the application. Not allowed for LLM reasoning, because it would be a security hole to let the model control the harness.
+blocked_path_prefixes:
+  - /__control
+
+# Action types the agent may perform at all.
+allowed_actions: [click, type_text, type_secret, select_option, press_key, wait, extract, request_human, finish]
+
+# Keys the agent may press. Enter is additionally checked against the form's submit control. On press_key actions, the model may only press one key at a time. The model cannot override this.
+allowed_keys: [Enter, Tab, Escape]
+
+# Controls whose visible label matches one of these (case-insensitive, full match) are
+# irreversible: they post, move money, or destroy data. They always need a human decision.
+irreversible_controls:
+  - "confirm"
+  - "post"
+  - "submit"
+  - "approve"
+  - "transfer( funds)?"
+  - "delete.*"
+  - "close (account|share)"
+  - "pay( now)?"
+
+# Credentials are referenced by logical name; values come from environment variables
+# (.env locally, a vault in production) and are never shown to the model or persisted.
+secrets:
+  teller_user:
+    env: TELLER_USER
+    description: Teller sign-on user ID
+  teller_password:
+    env: TELLER_PASSWORD
+    description: Teller sign-on password
+
+# Pattern-based redaction. `channels` says where a rule applies:
+#   model - text and screenshots sent to the LLM (data minimisation)
+#   logs  - everything persisted: logs, traces, artifacts, evidence screenshots
+# Balances are masked in logs but visible to the model, which may need them to reason.
+redaction:
+  - name: ssn
+    pattern: '\b\d{3}-\d{2}-\d{4}\b'
+    channels: [model, logs]
+  - name: card_number
+    pattern: '\b(?:\d[ -]?){13,19}\b'
+    validate: luhn          # only real card numbers, not timestamps or reference numbers
+    channels: [model, logs]
+  - name: email
+    pattern: '\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'
+    channels: [model, logs]
+  - name: date_of_birth
+    pattern: '\b\d{2}/\d{2}/\d{4}\b'
+    channels: [model, logs]
+  - name: money
+    pattern: '\$\s?\d[\d,]*\.\d{2}'
+    channels: [logs]

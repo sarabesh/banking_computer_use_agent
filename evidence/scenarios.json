@@ -1,0 +1,110 @@
+[
+  {
+    "scenario": "01-replay-success",
+    "status": "success",
+    "outcome": null,
+    "error": null,
+    "interventions": [],
+    "low_confidence_steps": [],
+    "duration_ms": 4905,
+    "demonstrates": "the happy path, all steps via primary locators"
+  },
+  {
+    "scenario": "02-replay-success-other-member",
+    "status": "success",
+    "outcome": null,
+    "error": null,
+    "interventions": [],
+    "low_confidence_steps": [],
+    "duration_ms": 4854,
+    "demonstrates": "same capability, different input"
+  },
+  {
+    "scenario": "03-business-outcome-not-found",
+    "status": "business_outcome",
+    "outcome": "record_not_found",
+    "error": null,
+    "interventions": [],
+    "low_confidence_steps": [],
+    "duration_ms": 3730,
+    "demonstrates": "legitimate negative answer, not a crash"
+  },
+  {
+    "scenario": "04-business-outcome-invalid-input",
+    "status": "business_outcome",
+    "outcome": "invalid_search_input",
+    "error": null,
+    "interventions": [],
+    "low_confidence_steps": [],
+    "duration_ms": 3696,
+    "demonstrates": "app-side validation error mapped to a business outcome"
+  },
+  {
+    "scenario": "05-recovered-system-notice",
+    "status": "success",
+    "outcome": null,
+    "error": null,
+    "interventions": [],
+    "low_confidence_steps": [],
+    "duration_ms": 6105,
+    "demonstrates": "blocking interstitial dismissed, run continues"
+  },
+  {
+    "scenario": "06-recovered-slow-app",
+    "status": "success",
+    "outcome": null,
+    "error": null,
+    "interventions": [],
+    "low_confidence_steps": [],
+    "duration_ms": 9023,
+    "demonstrates": "1.5 s latency on every page, bounded waiting"
+  },
+  {
+    "scenario": "07-failure-app-error-escalated",
+    "status": "failed",
+    "outcome": "app_error",
+    "error": "recovery_exhausted",
+    "interventions": [
+      "returned_to_caller"
+    ],
+    "low_confidence_steps": [],
+    "duration_ms": 3293,
+    "demonstrates": "persistent app error: bounded reloads, then hard failure + intervention request returned to the caller"
+  },
+  {
+    "scenario": "08-failure-session-expired",
+    "status": "failed",
+    "outcome": "session_expired",
+    "error": "outcome_failure",
+    "interventions": [],
+    "low_confidence_steps": [],
+    "duration_ms": 2700,
+    "demonstrates": "session expiry: hard failure with the failing step identified"
+  },
+  {
+    "scenario": "09-drift-other-tenant",
+    "status": "failed",
+    "outcome": null,
+    "error": "success_check_failed",
+    "interventions": [],
+    "low_confidence_steps": [
+      "click_sign_on",
+      "click_go",
+      "extract_savings_balance"
+    ],
+    "duration_ms": 8748,
+    "demonstrates": "same vendor product, other tenant: fallback locators carry the flow, success checkpoint reports drift"
+  },
+  {
+    "scenario": "10-handoff-session-expired",
+    "status": "success",
+    "outcome": null,
+    "error": null,
+    "interventions": [
+      "resumed"
+    ],
+    "low_confidence_steps": [],
+    "duration_ms": 6973,
+    "demonstrates": "session dies mid-run; operator takes the live session, signs in again, hands back; replay resumes"
+  }
+]

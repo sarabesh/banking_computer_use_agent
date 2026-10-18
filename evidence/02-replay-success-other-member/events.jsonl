@@ -1,0 +1,17 @@
+{"seq": 1, "ts": "2026-10-18T18:40:45.296+00:00", "type": "replay_started", "capability": "member_savings_balance", "version": "0.2.0", "content_hash": "sha256:dbd70803fe1be22e60749ceb4a8a86fc6f7379df6b4bfa15abeceb984fbb8a5d", "status": "draft", "allow_draft": true, "base_url": "http://127.0.0.1:60700", "inputs": {"member_number": "24680"}}
+{"seq": 2, "ts": "2026-10-18T18:40:45.297+00:00", "type": "supervised_run", "reason": "draft capability replayed with --allow-draft"}
+{"seq": 3, "ts": "2026-10-18T18:40:46.509+00:00", "type": "step_started", "step": "fill_teller_user", "action": "fill_secret", "approved_by": null}
+{"seq": 4, "ts": "2026-10-18T18:40:46.946+00:00", "type": "step_ok", "step": "fill_teller_user", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 437}
+{"seq": 5, "ts": "2026-10-18T18:40:46.947+00:00", "type": "step_started", "step": "fill_teller_password", "action": "fill_secret", "approved_by": null}
+{"seq": 6, "ts": "2026-10-18T18:40:47.322+00:00", "type": "step_ok", "step": "fill_teller_password", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 374}
+{"seq": 7, "ts": "2026-10-18T18:40:47.322+00:00", "type": "step_started", "step": "click_sign_on", "action": "click", "approved_by": null}
+{"seq": 8, "ts": "2026-10-18T18:40:47.959+00:00", "type": "step_ok", "step": "click_sign_on", "strategy": "role", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 637}
+{"seq": 9, "ts": "2026-10-18T18:40:47.960+00:00", "type": "step_started", "step": "fill_member_number", "action": "fill", "approved_by": null}
+{"seq": 10, "ts": "2026-10-18T18:40:48.451+00:00", "type": "step_ok", "step": "fill_member_number", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 490}
+{"seq": 11, "ts": "2026-10-18T18:40:48.451+00:00", "type": "step_started", "step": "click_go", "action": "click", "approved_by": null}
+{"seq": 12, "ts": "2026-10-18T18:40:49.064+00:00", "type": "step_ok", "step": "click_go", "strategy": "role", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 612}
+{"seq": 13, "ts": "2026-10-18T18:40:49.064+00:00", "type": "step_started", "step": "click_select", "action": "click", "approved_by": null}
+{"seq": 14, "ts": "2026-10-18T18:40:49.731+00:00", "type": "step_ok", "step": "click_select", "strategy": "role", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 666}
+{"seq": 15, "ts": "2026-10-18T18:40:49.731+00:00", "type": "step_started", "step": "extract_savings_balance", "action": "extract", "approved_by": null}
+{"seq": 16, "ts": "2026-10-18T18:40:49.951+00:00", "type": "step_ok", "step": "extract_savings_balance", "strategy": "table_cell", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 220}
+{"seq": 17, "ts": "2026-10-18T18:40:50.152+00:00", "type": "replay_finished", "status": "success", "outcome": null, "error": null, "escalate": false, "duration_ms": 4854}

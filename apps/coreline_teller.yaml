@@ -1,0 +1,57 @@
+# App profile for the vendor product "CoreLine Teller" (the mock target app).
+# Describes the product's runtime conditions ONCE, for every capability and every tenant.
+# Rules are evaluated in order; recoverable rules first so a notice is dismissed before
+# anything else is judged. Text matched here is identical across tenants (labels differ,
+# message codes do not), which is what makes the rules reusable.
+id: coreline_teller
+product: CoreLine Teller
+versions: ">=7.4"
+outcomes:
+  # ---- recoverable: replay handles these and carries on
+  - code: system_notice
+    kind: recoverable
+    description: Blocking maintenance notice overlay; acknowledging it is harmless.
+    match: {text: SYSTEM NOTICE}
+    recover: {action: click, target: {role: button, name: Acknowledge}, max_attempts: 3}
+  - code: app_error
+    kind: recoverable
+    description: Transient server error page. Reload, but never after an irreversible step.
+    match: {text: "Server Error in '/CoreLine' Application"}
+    recover: {action: reload, max_attempts: 2, only_if_no_side_effects: true}
+
+  # ---- failures: stop with a clear error
+  - code: session_expired
+    kind: failure
+    description: Session timed out. Not re-authenticated automatically, since re-running sign-on mid-flow is not known to be safe.
+    match: {text: SEC-440}
+  - code: not_signed_on
+    kind: failure
+    description: The session is not signed on.
+    match: {text: Not Signed On}
+  - code: permission_denied
+    kind: failure
+    description: The service account lacks the role for this function. Needs a human, not a retry.
+    match: {text: SEC-403}
+    escalate: true
+
+  # ---- business outcomes: legitimate answers the caller must handle
+  - code: record_not_found
+    kind: business
+    description: No member matches the search.
+    match: {text: No records match criteria.}
+    screens: [/w/results, /w/member/*]
+  - code: invalid_search_input
+    kind: business
+    description: The application rejected the search criteria (e.g. member number format).
+    match: {regex: 'ERR-10\d\d'}
+    screens: [/w/results]
+  - code: member_restricted
+    kind: business
+    description: The member's status does not allow new shares.
+    match: {text: ERR-3301}
+    screens: [/w/member/*/open]
+  - code: invalid_share_request
+    kind: business
+    description: The new-share form was rejected (type, nickname or deposit).
+    match: {regex: 'ERR-22\d\d'}
+    screens: [/w/member/*/open]

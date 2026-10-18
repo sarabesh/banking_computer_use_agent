@@ -5,3 +5,5 @@ __pycache__/
 .pytest_cache/
 runs/
 .pytest_tmp/
+# The take-home brief itself is not ours to publish.
+Assignment*.pdf
