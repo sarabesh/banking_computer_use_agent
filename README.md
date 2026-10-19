@@ -14,15 +14,16 @@ goal ──► discover (LLM) ──► trace ──► compile ──► capabi
                                   stuck or approval ──► operator takes the live session ──► resume
 ```
 
-> This README is a hands-on walkthrough. Design and trade-offs: [REPORT.md](REPORT.md).
-> Recorded runs of every scenario: [evidence/](evidence/README.md).
+> Design and trade-offs: [REPORT.md](REPORT.md) · The flows as pictures: [docs/architecture.md](docs/architecture.md)
+> · Recorded runs of every scenario, with the artifacts they used: [evidence/](evidence/README.md)
 
 ---
 
-## 1. Setup (once)
+## Quick start: discover once, replay without an LLM
 
-Windows PowerShell, from the project folder:
+Windows PowerShell, from the project folder.
 
+**1. Set up (once)**
 ```bash
 python -m venv .venv
 ```
@@ -35,123 +36,104 @@ pip install -r requirements.txt
 ```bash
 playwright install chromium
 ```
+Copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY`. Only discovery and the bank agent
+need it. The teller credentials in `.env` are the mock app's test accounts. In every new
+terminal, `cd` to the project folder and run `.venv\Scripts\Activate.ps1`.
 
-Copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY` (needed only for scenarios A and I).
-The teller credentials in it are the mock app's test accounts.
-
-**Every new terminal:** `cd` to the project folder and run `.venv\Scripts\Activate.ps1`.
-
-## 2. Start the mock banks
-
-Institutions running the same vendor product ("CoreLine Teller"), configured differently.
-Leave each running in its own terminal:
-
+**2. Start the mock bank**, in its own terminal, and leave it running:
 ```bash
 python -m target_app --tenant acme --port 5001
 ```
-```bash
-python -m target_app --tenant riverbend --port 5002
-```
 
-Optional, for the "bank nobody has registered yet" demo in scenario I:
-```bash
-python -m target_app --tenant lakeside --port 5003
-```
-
-Open http://127.0.0.1:5001 to look around (sign-on details: `target_app/seed/users.json`).
-
-**Note:** the system identifies each bank from its first screen and keeps what it learns in
-[`tenants.yaml`](tenants.yaml) - the first replay at Acme or Riverbend records its screen
-signature there, and a new bank (Lakeside) gets an entry. `git checkout tenants.yaml` resets it.
-
-**Between scenarios**, reset any injected faults (PowerShell):
-```bash
-Invoke-RestMethod -Method Post -Uri http://127.0.0.1:5001/__control/reset
-```
-
----
-
-## 3. Scenarios - play the user
-
-Each run writes a folder under `runs/` (`events.jsonl`, `result.json` or `trace.json`,
-screenshots). Exit codes: `0` success, `3` business outcome, `4` needs approval, `1` failure.
-
-### A. Discover a capability with the LLM  *(costs ~$0.15)*
-
-You are the **automation engineer**. Give a goal; Claude drives the live app in a visible
-browser, one action at a time, and records how.
-
+**3. Discover: the LLM does the task once** *(about $0.15)*. The LLM drives the app in a visible
+browser, one action at a time, and records what it did and why:
 ```bash
 python -m cua discover --goal "Look up member 12345 and read their current savings balance" --url http://127.0.0.1:5001/login
 ```
+It signs on with **named secrets**, so it never sees the password. It marks `12345` as an input,
+and it **extracts** the balance from the screen. The result is `runs/<time>-discover-.../trace.json`.
 
-Watch for: it signs on with **named secrets** (it never sees the password), marks `12345`
-as an input, and **extracts** the balance from the screen (it never types the value).
-Result: `runs/<time>-discover-.../trace.json`.
-
-### B. Compile the trace into a capability
-
+**4. Compile the trace into a capability**
 ```bash
 $run = (Get-ChildItem runs -Directory -Filter "*-discover-*" | Sort-Object LastWriteTime | Select-Object -Last 1).FullName
 ```
 ```bash
 python -m cua compile "$run\trace.json" --id member_savings_balance --version 0.9.0 --out runs\demo-capabilities
 ```
+Open `runs\demo-capabilities\member_savings_balance\0.9.0.yaml`. It has typed inputs and
+outputs, a **locator bundle** for each step (semantic → relational → structural fallbacks),
+the outcome rules, and the success checkpoint. It is a **draft**: unattended replay refuses
+it until a human sets `status: approved`.
 
-Open `runs\demo-capabilities\member_savings_balance\0.9.0.yaml`: typed inputs/outputs, each
-step's **locator bundle** (semantic → relational → structural fallback), outcome rules, the
-success checkpoint. It is a **draft**: replay refuses it unattended. (The demo writes to
-`runs\` so the reviewed `capabilities\` stay untouched.)
-
-### C. Replay - no LLM
-
-You are the **production system**. The approved capability is
-`capabilities\member_savings_balance\0.3.0.yaml`.
-
+**5. Replay: no LLM, same result every time**. Your draft, as a supervised run:
 ```bash
-python -m cua replay capabilities\member_savings_balance\0.3.0.yaml --base-url http://127.0.0.1:5001 --input member_number=12345
+python -m cua replay runs\demo-capabilities\member_savings_balance\0.9.0.yaml --base-url http://127.0.0.1:5001 --input member_number=12345 --allow-draft
 ```
+The reviewed, approved capability, for another member:
 ```bash
-python -m cua replay capabilities\member_savings_balance\0.3.0.yaml --base-url http://127.0.0.1:5001 --input member_number=24680
+python -m cua replay capabilities\member_savings_balance\0.4.0.yaml --base-url http://127.0.0.1:5001 --input member_number=24680
+```
+Each step prints which locator found it and how confidently. The result carries the typed
+`savings_balance`. Every run writes a folder under `runs/` with `events.jsonl`, `result.json`
+or `trace.json`, and screenshots with the data masked. Exit codes: `0` success, `3` business
+outcome, `4` needs approval, `1` failure.
+
+**No API key, or no live services?** The test suite covers everything above, and more:
+```bash
+python -m pytest tests --basetemp=.pytest_tmp
+```
+101 tests in about 9 minutes, with no API key. A scripted model stands in for the LLM, a
+scripted operator for the human, and the mock app runs in-process. `--basetemp` is only
+needed where the system temp folder is locked down.
+
+---
+
+## More scenarios, case by case
+
+Expand the one you need. Between scenarios, reset any faults you injected:
+```bash
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:5001/__control/reset
 ```
 
-Each step prints which locator found it and how confidently; the result carries the typed
-`savings_balance`. To replay your own draft from B, add `--allow-draft` (a supervised run).
-
-### D. Business outcomes - legitimate answers, not crashes
+<details>
+<summary><b>Business outcomes</b>: legitimate answers, not crashes</summary>
 
 ```bash
-python -m cua replay capabilities\member_savings_balance\0.3.0.yaml --base-url http://127.0.0.1:5001 --input member_number=99999
+python -m cua replay capabilities\member_savings_balance\0.4.0.yaml --base-url http://127.0.0.1:5001 --input member_number=99999
 ```
 → `business_outcome: record_not_found`.
 
 ```bash
-python -m cua replay capabilities\member_savings_balance\0.3.0.yaml --base-url http://127.0.0.1:5001 --input member_number=12a45
+python -m cua replay capabilities\member_savings_balance\0.4.0.yaml --base-url http://127.0.0.1:5001 --input member_number=12a45
 ```
 → `business_outcome: invalid_search_input` (the app's own `ERR-1042`).
+</details>
 
-### E. Recoverable conditions - handled, the run continues
+<details>
+<summary><b>Recoverable conditions</b>: handled, and the run continues</summary>
 
-Turn on a blocking "System Notice" overlay, replay (command from C), then reset:
+Turn on a blocking "System Notice" overlay, replay (the approved command from step 5), then reset:
 ```bash
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:5001/__control/faults -ContentType 'application/json' -Body '{"interstitial_rate": 1.0}'
 ```
-→ success; the result lists `recovered: system_notice` on the steps where it was dismissed.
+→ success. The result lists `recovered: system_notice` on the steps where it was dismissed.
 
-Make every page 1.5 s slow, replay, then reset:
+Make every page 1.5 s slower, replay, then reset:
 ```bash
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:5001/__control/faults -ContentType 'application/json' -Body '{"delay_ms": 1500}'
 ```
-→ success, just slower (bounded waits, no fixed sleeps).
+→ success, just slower: waits are bounded and there are no fixed sleeps.
+</details>
 
-### F. Hard failures - stop with a clear error and evidence
+<details>
+<summary><b>Hard failures</b>: stop with a clear error and evidence</summary>
 
 Persistent server errors, replay, then reset:
 ```bash
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:5001/__control/faults -ContentType 'application/json' -Body '{"error_rate": 1.0}'
 ```
-→ `failed: recovery_exhausted` after two bounded reloads; `escalate: true`; the run folder
-has `failure-*.jpg` (data blacked out), `failure-*.txt` (screen structure) and
+→ `failed: recovery_exhausted` after two bounded reloads, with `escalate: true`. The run
+folder has `failure-*.jpg` (data blacked out), `failure-*.txt` (the screen's structure) and
 `intervention.json` (the request a human would get).
 
 Session expiry, replay, then reset:
@@ -159,18 +141,20 @@ Session expiry, replay, then reset:
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:5001/__control/faults -ContentType 'application/json' -Body '{"session_ttl_s": 0}'
 ```
 → `failed: session_expired`, naming the step.
+</details>
 
-### G. Human handoff - take over the live session, hand it back
+<details>
+<summary><b>Human handoff</b>: take over the live session, then hand it back</summary>
 
-You are the **operator**. Three terminals.
+You are the **operator**. You need three terminals.
 
-1. Simulate an outage: the `error_rate` command from F.
-2. Terminal 2 - replay with handoff enabled (a browser opens and stays open):
+1. Simulate an outage: the `error_rate` command from *Hard failures*.
+2. In terminal 2, replay with handoff enabled. A browser opens and stays open:
    ```bash
-   python -m cua replay capabilities\member_savings_balance\0.3.0.yaml --base-url http://127.0.0.1:5001 --input member_number=12345 --handoff
+   python -m cua replay capabilities\member_savings_balance\0.4.0.yaml --base-url http://127.0.0.1:5001 --input member_number=12345 --handoff
    ```
    It stops with `>> HUMAN NEEDED [int-xxxx]` and waits.
-3. Terminal 3 - the operator:
+3. In terminal 3, the operator:
    ```bash
    python -m cua operator list
    ```
@@ -183,52 +167,109 @@ You are the **operator**. Three terminals.
    ```
 4. Terminal 2 continues from the search screen and finishes. The result shows
    `interventions` (who, decision, how long) and `control_history`
-   (`automation → awaiting_human → human → automation`); your clicks appear as `actor: human`.
+   (`automation → awaiting_human → human → automation`). Your clicks appear as `actor: human`.
 
-Also try `operator show <id>`, `operator abort <id> --note "why"`, `operator done <id>`. While
-you hold control, automation is locked out of the session.
+Also try `operator show <id>`, `operator abort <id> --note "why"` and `operator done <id>`.
+While you hold control, automation is locked out of the session. The CLI refuses a command
+that isn't possible in the current state, such as `approve` on a request that didn't ask for
+approval, and lists what is possible.
 
-**If it can't be resolved:** `abort`/`reject` (or no answer within `--handoff-timeout`) ends the
-run as `failed` with `operator_aborted` / `operator_rejected` / `escalation_timeout`, naming who
-and why. **If the browser window is closed by mistake** - by automation's turn or yours - the
-run ends as `failed: session_lost` (a structured result, never a crash), the open request is
-closed in the inbox, and nothing is retried: a new session would mean signing on again mid-flow.
+The operator commands read the inbox under the run's `--runs-dir` (by default `runs\inbox`).
+If you replay with `--runs-dir X`, add `--inbox X\inbox` to them.
 
-### H. A second institution - reuse without re-recording
+**If it can't be resolved:** `abort` or `reject`, or no answer within `--handoff-timeout`, ends
+the run as `failed` with `operator_aborted`, `operator_rejected` or `escalation_timeout`,
+naming who and why. **If the browser window is closed by mistake**, whether during
+automation's turn or yours, the run ends as `failed: session_lost`. That's a structured
+result, never a crash: the open request is closed in the inbox, and nothing is retried,
+because a new session would mean signing on again mid-flow.
+</details>
 
-You are **onboarding Riverbend** (same product, different labels and column order). No
-discovery, no LLM. You only give its URL; its first screen identifies it as tenant
-`riverbend`, and that tenant's override is picked (or created).
+<details>
+<summary><b>Approving an irreversible step</b>: a write that a human must confirm</summary>
+
+`open_holiday_share` posts a new sub-account, and its **Confirm** click is classified
+irreversible. Without `--handoff`, the replay stops there with `needs_approval` and nothing is
+posted:
+```bash
+python -m cua replay capabilities\open_holiday_share\0.1.0.yaml --base-url http://127.0.0.1:5001 --input member_number=12345 --input "share_type=XMAS - Holiday Club" --input initial_deposit=25.00
+```
+Add `--handoff`, then run `python -m cua operator approve int-xxxx` from another terminal. The
+automation clicks Confirm itself and returns the new share suffix and confirmation number.
+</details>
+
+<details>
+<summary><b>A second institution</b>: reuse without re-recording</summary>
+
+You are **onboarding Riverbend**: the same product, with different labels and column order.
+Start it in its own terminal:
+```bash
+python -m target_app --tenant riverbend --port 5002
+```
+There's no discovery and no LLM. You only give its URL. Its first screen identifies it as
+tenant `riverbend`, and that tenant's override is picked up, or created.
 
 1. Probe the unchanged base capability at Riverbend, as a **supervised** run (`--allow-draft`):
    ```bash
-   python -m cua replay capabilities\member_savings_balance\0.3.0.yaml --base-url http://127.0.0.1:5002 --input member_number=12345 --overrides runs\demo-overrides --allow-draft
+   python -m cua replay capabilities\member_savings_balance\0.4.0.yaml --base-url http://127.0.0.1:5002 --input member_number=12345 --overrides runs\demo-overrides --allow-draft
    ```
-   → success, but some steps are found only by weak fallbacks and the screen title differs:
-   it degrades gracefully and says so (`low_confidence_steps`, `warnings`). Buttons and the
-   result-row link are still found with high confidence by **relational** locators.
-   Because it drifted and Riverbend has no override yet, it ends with
+   → success, but some steps are found only by weak fallbacks, and the screen title differs.
+   It degrades gracefully and says so (`low_confidence_steps`, `warnings`). Buttons and the
+   result-row link are still found with high confidence, by **relational** locators. Because
+   it drifted and Riverbend has no override yet, it ends with
    `Tenant override: drift detected. Draft written: ...riverbend.yaml`.
-   (Unattended replays - no `--allow-draft` - never write files; they only report drift.
-   `python -m cua override suggest ...` does the same on demand, `--force` to redo a draft.)
-2. Open `runs\demo-overrides\member_savings_balance\riverbend.yaml`: only Riverbend's
+   Unattended replays (without `--allow-draft`) never write files; they only report drift.
+   `python -m cua override suggest ...` does the same on demand; add `--force` to redo a draft.
+2. Open `runs\demo-overrides\member_savings_balance\riverbend.yaml`. It holds only Riverbend's
    differences (three field captions, the `Current Bal` column, the screen title), pinned to
-   the base's hash, as a **draft**. Review it - especially that `Current Bal` (not `Avail Bal`)
-   is the savings balance, since the base found that cell only by position - and set
-   `status: approved`. Generation is automatic; activation is a human decision.
-3. Replay with it - every step high confidence, no warnings:
+   the base's hash, as a **draft**. Review it, and set `status: approved`. Check especially
+   that `Current Bal`, not `Avail Bal`, is the savings balance, since the base found that cell
+   only by position. Generation is automatic; activation is a human decision.
+3. Replay with it. Every step is high confidence, with no warnings:
    ```bash
-   python -m cua replay capabilities\member_savings_balance\0.3.0.yaml --base-url http://127.0.0.1:5002 --input member_number=12345 --overrides runs\demo-overrides
+   python -m cua replay capabilities\member_savings_balance\0.4.0.yaml --base-url http://127.0.0.1:5002 --input member_number=12345 --overrides runs\demo-overrides
    ```
 
-(The reviewed override actually used by the catalog is `overrides\member_savings_balance\riverbend.yaml`;
-the demo uses `runs\demo-overrides` so it doesn't touch it.)
+The reviewed override the catalog actually uses is
+`overrides\member_savings_balance\riverbend.yaml`. The demo uses `runs\demo-overrides`, so it
+leaves that file alone.
+</details>
 
-### I. The bank's AI agent calls the capability  *(costs a few cents per question)*
+<details>
+<summary><b>A bank nobody has registered yet</b>: the institution is recognised from its screen, not its URL</summary>
+
+The URL only says where to open the app. The tenant registry [`tenants.yaml`](tenants.yaml)
+holds no URLs. Before anything is typed, the first screen's **signature** is matched against
+the registry. The signature is the institution's name (weighted most), the page title, and
+the screen's labels and buttons.
+- A registered institution is used, and its override applied.
+- An unknown one is **registered automatically** (`auto_registered: true`, for review), so
+  the next run matches it.
+- An ambiguous screen runs the base capability with a warning rather than guessing.
+
+Which hosts may be opened at all is still limited by `policy.yaml`'s allowlist.
+
+Start a third mock tenant and replay against it:
+```bash
+python -m target_app --tenant lakeside --port 5003
+```
+```bash
+python -m cua replay capabilities\member_savings_balance\0.4.0.yaml --base-url http://127.0.0.1:5003 --input member_number=12345
+```
+→ `Tenant: lakeside_savings_bank - new institution 'Lakeside Savings Bank' registered ...`.
+Run it again → `screen matches 'lakeside_savings_bank' ... signature 1.00`.
+
+Lakeside is a copy of Acme's configuration (same product, version, title and labels). The
+name decides, so it isn't mistaken for Acme. Swapping ports between banks changes nothing
+either: each one is recognised by its own screen. This writes to `tenants.yaml`;
+`git checkout tenants.yaml` undoes it.
+</details>
+
+<details>
+<summary><b>The bank's AI agent</b>: calls capabilities by name <i>(a few cents per question)</i></summary>
 
 You are **staff at a credit union** asking their AI assistant. The agent is deployed for one
-institution and sees only that institution's approved capabilities, as typed tools.
-
+institution, and sees only that institution's approved capabilities, as typed tools.
 ```bash
 python -m cua catalog --base-url http://127.0.0.1:5001
 ```
@@ -242,46 +283,30 @@ python -m cua agent --base-url http://127.0.0.1:5001 "Does member 99999 exist?"
 python -m cua agent --base-url http://127.0.0.1:5002 "Look up member 12345's savings balance."
 ```
 
-The agent decides **what** to call; the call is deterministic replay. It never sees the
-app, a browser, a URL or a credential - only the contract and the typed result.
-
-**How it knows which institution it's talking to - from the screen, not the URL.** The URL
-only says where to open the app; the tenant registry [`tenants.yaml`](tenants.yaml) holds no
-URLs. Before anything is typed, the first screen's **signature** - the institution's name
-(weighted most), the page title, and the screen's labels and buttons - is matched against
-the registry: a registered institution is used (and its override applied); an unknown one is
-**registered automatically** (`auto_registered: true`, for review) so the next run matches it;
-an ambiguous screen runs the base capability with a warning rather than guessing. The model
-never sees the registry, the URL, or the institution's name. Which hosts may be opened at all
-is still limited by `policy.yaml`'s allowlist.
-
-Try it with a bank nobody has registered yet - start a third mock tenant:
+A write goes through the same approval gate, so the agent can't post anything by itself:
 ```bash
-python -m target_app --tenant lakeside --port 5003
+python -m cua agent --base-url http://127.0.0.1:5001 "Open a Holiday Club sub-account for member 12345 with an initial deposit of 25 dollars."
 ```
+→ the replay stops at Confirm with `needs_approval`, and the agent says it is waiting for a
+person to approve.
+
+A request no capability covers is **not approximated** with another tool:
 ```bash
-python -m cua replay capabilities\member_savings_balance\0.3.0.yaml --base-url http://127.0.0.1:5003 --input member_number=12345
+python -m cua agent --base-url http://127.0.0.1:5001 "What is the membership status of member 12345?"
 ```
-→ `Tenant: lakeside_savings_bank - new institution 'Lakeside Savings Bank' registered ...`;
-run it again → `screen matches 'lakeside_savings_bank' ... signature 1.00`. Lakeside is a copy of
-Acme's configuration (same product, version, title and labels) - the name decides, so it is not
-mistaken for Acme. Swapping ports between banks changes nothing either: each is recognised by
-its own screen. (This writes to `tenants.yaml`; `git checkout tenants.yaml` undoes it.)
+→ the agent calls `report_unsupported`, which logs a `capability_gap` event, and answers
+"not supported yet". The CLI prints the `discover` command for that goal, for a human to run
+(Quick start step 3). The agent never starts discovery itself, because discovery drives the
+live system.
 
-### J. Everything without live services
-
-```bash
-python -m pytest tests --basetemp=.pytest_tmp
-```
-
-97 tests, ~8 minutes, no API key: a scripted model stands in for the LLM, a scripted operator
-for the human, and the mock app runs in-process. `--basetemp` is only needed where the
-system temp folder is locked down.
-
+The agent decides **what** to call; the call itself is deterministic replay. The agent never
+sees the app, a browser, a URL, an institution's name or a credential: only the contract and
+the typed result.
+</details>
 
 ---
 
-## 4. Where things are
+## Where things are
 
 | Path | What |
 |---|---|
@@ -294,22 +319,32 @@ system temp folder is locked down.
 | `cua/surface/` | the web surface (Playwright) and in-page perception (`describe.js`) |
 | `policy.yaml` | allowlist, irreversible actions, secrets by name, redaction |
 | `apps/coreline_teller.yaml` | the vendor product's runtime conditions (shared by all capabilities) |
-| `capabilities/`, `overrides/`, `tenants.yaml` | reviewed artifacts; the tenant registry (institutions and their screen signatures - no URLs) |
-| `target_app/` | the mock legacy bank app (hostile markup, two tenants, fault injection) |
-| `evidence/` | recorded runs of every scenario above |
+| `capabilities/`, `overrides/`, `tenants.yaml` | reviewed artifacts; the tenant registry (institutions and their screen signatures, no URLs) |
+| `target_app/` | the mock legacy bank app (hostile markup, three tenants, fault injection) |
+| `evidence/` | recorded runs of every scenario above, plus copies of the artifacts they used (`evidence/artifacts/`) |
+| `docs/architecture.md` | the flows as diagrams |
 
-## 5. The mock bank (`target_app/`)
+<details>
+<summary><b>The mock bank</b> (<code>target_app/</code>)</summary>
 
-A stand-in for a legacy core-banking teller app - we have no real bank system. Hostile on
-purpose: server-rendered pages, table layouts, the work area in an `<iframe>`, no ids or test
-ids, field names like `q1`, captions in neighbouring cells instead of `<label>`s, a clickable
-`<div>` posing as a button, errors returned as HTTP 200 pages. Three tenants share the code and
-differ only by configuration (`target_app/tenants/*.json`): **Acme** (the base), **Riverbend**
-(different labels, column order and product version) and **Lakeside** (Acme's exact
-configuration under another name - the "unregistered bank"). All data is fictional (SSNs in
-the never-issued 900 range).
+A stand-in for a legacy core-banking teller app, since we have no real bank system. It is
+hostile on purpose:
+- server-rendered pages and table layouts, with the work area in an `<iframe>`;
+- no ids or test ids, and field names like `q1`;
+- captions in neighbouring cells instead of `<label>`s;
+- a clickable `<div>` posing as a button;
+- errors returned as HTTP 200 pages.
 
-Fault switches (test harness only - `/__control` is blocked by the automation's policy):
+Three tenants share the code and differ only by configuration (`target_app/tenants/*.json`):
+- **Acme**, the base;
+- **Riverbend**, with different labels, column order and product version;
+- **Lakeside**, Acme's exact configuration under another name: the "unregistered bank".
+
+All data is fictional (SSNs in the never-issued 900 range). Sign-on details for looking
+around at http://127.0.0.1:5001 are in `target_app/seed/users.json`.
+
+Fault switches are for the test harness only; `/__control` is blocked by the automation's
+policy.
 
 | Key | Effect |
 |---|---|
@@ -320,3 +355,4 @@ Fault switches (test harness only - `/__control` is blocked by the automation's 
 | `confirm_dialog` | native `confirm()` before posting a new share |
 
 Plus `POST /__control/expire-sessions` and `POST /__control/reset`.
+</details>
