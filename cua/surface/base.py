@@ -18,7 +18,8 @@ class ActionError(Exception):
     """An action could not be performed. `kind` lets callers react without string matching."""
 
     def __init__(self, kind: Literal["stale_ref", "not_found", "covered", "timeout", "not_editable",
-                                     "no_such_option", "blocked", "not_in_control", "other"], message: str):
+                                     "no_such_option", "blocked", "not_in_control", "session_lost", "other"],
+                 message: str):
         super().__init__(message)
         self.kind = kind
 
@@ -47,6 +48,8 @@ class Element:
     css: str | None = None         # structural path: last-resort locator
     bbox: list[float] | None = None
     occluded: bool = False         # something (an overlay) covers it
+    form: str | None = None        # identity of the form the control belongs to
+    is_submit: bool = False        # it is that form's submit control
 
     def fingerprint(self) -> dict:
         """Everything a locator could be built from. Excludes row_text, which can hold PII."""

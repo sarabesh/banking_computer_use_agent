@@ -1,0 +1,12 @@
+Observation #1  title='CoreLine Teller - Staff Login'  frames: main=/login
+
+[frame main /login]
+  e1 text "Riverbend Federal Credit Union CoreLine Teller 7.6.0"
+  e2 text "Riverbend Federal Credit Union"
+  e3 text "Staff Login"
+  e4 cell "Operator:"
+  e5 textbox caption="Operator:" (empty)
+  e6 cell "PIN / Password:"
+  e7 textbox caption="PIN / Password:" (empty)
+  e8 button "Login"
+  e9 text "Authorized use only. All activity is monitored."

@@ -185,6 +185,136 @@ def test_unattended_escalation_routes_the_request_to_the_caller(lookup_capabilit
     assert request["trigger"] == "unrecoverable" and "app_error" in request["reason"]
 
 
+def test_discovery_irreversible_step_is_approved_by_an_operator_then_compiles_as_gated(tmp_path, live_app, policy,
+                                                                                      secrets_env):
+    """Discovery reaches Confirm, policy refuses it, the agent asks for approval, an operator
+    approves, the action is performed - and the compiled capability marks that step as
+    requiring approval on every future replay."""
+    app, base = live_app
+    surface = WebSurface(policy, headless=True)
+    inbox = Inbox(tmp_path / "inbox")
+    confirm = lambda o: ("click", {"ref": ref(o, role="button", name="Confirm"), "reason": R})  # noqa: E731
+    script = LOGIN + LOOKUP + [
+        lambda o: ("click", {"ref": ref(o, name="Open Sub-Account"), "reason": R}),
+        lambda o: ("select_option", {"ref": ref(o, role="combobox"), "option": "XMAS", "reason": R}),
+        lambda o: ("type_text", {"ref": ref(o, role="textbox", caption="Initial Deposit:"), "text": "25", "reason": R}),
+        lambda o: ("click", {"ref": ref(o, role="button", name="Continue"), "reason": R}),
+        confirm,                                                                       # refused by policy
+        lambda o: ("request_human", {"kind": "approval_needed", "reason": "posting the share is irreversible"}),
+        lambda o: ("finish", {"status": "success", "summary": "share posted",
+                              "success_evidence": "Sub-Account Opened screen with a confirmation number"}),
+    ]
+    model = ScriptedModel(script)
+    agent = DiscoveryAgent(model, surface, policy, tmp_path / "disc", echo=lambda _: None,
+                           handoff=Handoff(inbox, poll_ms=150, echo=lambda _: None,
+                                           on_poll=Operator(inbox, surface, decide="approve")))
+    model.agent = agent
+    result = agent.run("open a holiday club share for member 12345 with $25 and post it", f"{base}/login")
+
+    assert result.trace.status == "success", result.trace.summary
+    [intervention] = result.trace.interventions
+    assert intervention["trigger"] == "approval_needed" and intervention["decision"] == "approved"
+    gated = next(s for s in result.trace.steps if s.target and s.target.name == "Confirm")
+    assert gated.status == "ok" and f"approved by operator {OPERATOR}" in gated.detail
+    assert len(app.config["STATE"]["bank"].members["12345"]["accounts"]) == 4          # really posted
+    cap = compile_trace(result.trace, PROFILE, capability_id="open_holiday_share", policy=policy).capability
+    step = next(s for s in cap.steps if s.target and any(getattr(l, "name", None) == "Confirm" for l in s.target.locators))
+    assert step.requires_approval and cap.side_effects == "writes"
+
+
+def test_discovery_asks_for_approval_before_trying_and_the_operator_approves(tmp_path, live_app, policy,
+                                                                             secrets_env):
+    """What a real model did: on the review screen it asked for approval FIRST, without clicking
+    Confirm. Approval then applies to the one irreversible control on that screen."""
+    app, base = live_app
+    surface = WebSurface(policy, headless=True)
+    inbox = Inbox(tmp_path / "inbox")
+    script = LOGIN + LOOKUP + [
+        lambda o: ("click", {"ref": ref(o, name="Open Sub-Account"), "reason": R}),
+        lambda o: ("select_option", {"ref": ref(o, role="combobox"), "option": "XMAS", "reason": R}),
+        lambda o: ("type_text", {"ref": ref(o, role="textbox", caption="Initial Deposit:"), "text": "25", "reason": R}),
+        lambda o: ("click", {"ref": ref(o, role="button", name="Continue"), "reason": R}),
+        lambda o: ("request_human", {"kind": "approval_needed", "reason": "Confirm is irreversible; needs approval"}),
+        lambda o: ("finish", {"status": "success", "summary": "posted", "success_evidence": "Sub-Account Opened"}),
+    ]
+    model = ScriptedModel(script)
+    agent = DiscoveryAgent(model, surface, policy, tmp_path / "disc", echo=lambda _: None,
+                           handoff=Handoff(inbox, poll_ms=150, echo=lambda _: None,
+                                           on_poll=Operator(inbox, surface, decide="approve")))
+    model.agent = agent
+    result = agent.run("open a holiday club share for member 12345 with $25 and post it", f"{base}/login")
+
+    assert result.trace.status == "success", result.trace.summary
+    [intervention] = result.trace.interventions
+    assert intervention["trigger"] == "approval_needed" and intervention["decision"] == "approved"
+    assert len(app.config["STATE"]["bank"].members["12345"]["accounts"]) == 4            # posted, once
+    cap = compile_trace(result.trace, PROFILE, capability_id="open_holiday_share", policy=policy).capability
+    assert any(s.requires_approval for s in cap.steps) and cap.side_effects == "writes"
+
+
+def test_operator_cli_refuses_a_command_that_is_not_possible(tmp_path, capsys):
+    from cua.handoff import InterventionRequest
+    inbox = Inbox(tmp_path / "inbox")
+    req = InterventionRequest(run_id="r", run_kind="discovery", trigger="stuck", reason="x",
+                              allowed=["take_control", "resume", "abort"])
+    inbox.post(req)
+    inbox.set_status(req.id, control="awaiting_human", holder="-", pending_dialogs=[])
+    code = operator_cli(argparse.Namespace(inbox=str(inbox.root), operator=OPERATOR, note=None,
+                                           command="approve", request_id=req.id, answer=None))
+    out = capsys.readouterr().out
+    assert code == 1 and "'approve' is not possible" in out and "Possible: abort, take" in out
+    assert inbox.responses(req.id) == []                       # nothing sent that would be ignored
+
+
+def test_window_closed_mid_run_is_a_clear_failure_not_a_crash(lookup_capability, tmp_path):
+    _, server, base = serve()
+    policy = policy_for(base)
+    surface = WebSurface(policy, headless=True)
+    closed = []
+
+    def close_after_go(line):
+        if "click_go" in line and not closed:
+            closed.append(True)
+            surface.context.close()                  # someone closes the window by mistake
+
+    replayer = Replayer(surface, policy, tmp_path, step_timeout=3, echo=close_after_go)
+    try:
+        result = replayer.run(lookup_capability, {"member_number": "12345"}, base_url=base)
+    finally:
+        server.shutdown()
+    assert result.status == "failed" and result.outcome == "session_lost" and result.escalate
+    assert result.error.kind == "session_lost" and result.error.step == "click_select"
+    assert (replayer.log.dir / "result.json").exists()
+    assert result.control_history[-1]["to"] == "finished"
+
+
+def test_window_closed_while_human_holds_control_closes_the_request(lookup_capability, tmp_path):
+    _, server, base = serve(error_rate=1.0)
+    policy = policy_for(base)
+    surface = WebSurface(policy, headless=True)
+    inbox = Inbox(tmp_path / "inbox")
+    seen: list[str] = []
+
+    def operator(state, request):            # takes control, then closes the window - never resumes
+        if not seen:
+            seen.append(request.id)
+            send(inbox, "take", request.id)
+        elif state == ControlState.HUMAN:
+            surface.page.context.close()
+
+    replayer = Replayer(surface, policy, tmp_path, step_timeout=3, echo=lambda _: None,
+                        handoff=Handoff(inbox, poll_ms=150, echo=lambda _: None, on_poll=operator))
+    try:
+        result = replayer.run(lookup_capability, {"member_number": "12345"}, base_url=base)
+    finally:
+        server.shutdown()
+    assert result.status == "failed" and result.error.kind == "session_lost"
+    [request_id] = seen
+    status = inbox.status(request_id)
+    assert status["control"] == "finished" and status["decision"] == "session_lost" and status["closed"]
+    assert inbox.open_requests() == []                # nobody is left looking at a dead request
+
+
 def test_automation_cannot_act_while_a_human_holds_control(tmp_path, live_app, policy):
     _, base = live_app
     surface = WebSurface(policy, headless=True)

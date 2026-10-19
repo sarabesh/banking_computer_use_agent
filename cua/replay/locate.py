@@ -12,6 +12,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from fnmatch import fnmatch
+from typing import Callable
 
 from ..artifact.schema import LOCATOR_CONFIDENCE, PLACEHOLDER, OutcomeRule, Target
 from ..surface.base import Element, Observation
@@ -67,6 +68,8 @@ def _matches(loc, e: Element, inputs: dict[str, str]) -> bool:
     if by == "table_cell":
         return (e.kind == "text" and norm(e.col_header) == norm(loc.column)
                 and norm(e.row_key) == norm(render(loc.row_key, inputs)))
+    if by == "row_control":
+        return e.kind == "control" and e.role == loc.role and norm(e.row_key) == norm(render(loc.row_key, inputs))
     if by == "field_name":
         return e.tag == loc.tag and e.field_name == loc.field_name
     if by == "href":
@@ -76,12 +79,18 @@ def _matches(loc, e: Element, inputs: dict[str, str]) -> bool:
     return False
 
 
-def resolve(target: Target, obs: Observation, inputs: dict[str, str]) -> Resolution:
+def resolve(target: Target, obs: Observation, inputs: dict[str, str],
+            form_of: Callable[[str, Observation], str | None] | None = None) -> Resolution:
+    """form_of(step_id, obs) -> the form identity of the field that step uses, needed by
+    form_submit locators; without it they are skipped."""
     pool = _pool(obs, target.frame)
     tried: list[tuple[str, int]] = []
     for loc in target.locators:
         if loc.by == "position":
             hits = [e for e in pool if e.bbox and _iou(e.bbox, loc.bbox) >= 0.5]
+        elif loc.by == "form_submit":
+            form = form_of(loc.of_step, obs) if form_of else None
+            hits = [e for e in pool if form and e.kind == "control" and e.is_submit and e.form == form]
         else:
             hits = [e for e in pool if _matches(loc, e, inputs)]
         tried.append((loc.by, len(hits)))

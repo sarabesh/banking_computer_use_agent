@@ -1,0 +1,400 @@
+{
+  "status": "success",
+  "capability": "open_holiday_share",
+  "version": "0.1.0",
+  "content_hash": "sha256:2cb8c080e4cdb2f3ebce2e6f296a58e27f5d25ed47f3c42c6d0d0ac7a49286ff",
+  "outcome": null,
+  "tenant": "acme",
+  "tenant_note": "screen matches 'acme' (Acme Community Credit Union) signature 1.00",
+  "override": null,
+  "warnings": [
+    "success_text_not_shown: expected any of ['Share has been added to member {{member_number}}. Confirmation #:'] on the final screen"
+  ],
+  "final_screen": {
+    "frames": {
+      "main": "/main",
+      "work": "/w/member/12345/open/confirm"
+    },
+    "headings": [
+      "main: Acme Community Credit Union | CoreLine Teller 7.4.2",
+      "main: Acme Community Credit Union",
+      "main: M. Officer",
+      "main: Functions » Member Inquiry » Sign Off",
+      "main: Functions",
+      "work: Share has been added to member 12345. Confirmation #:",
+      "work: Sub-Account Opened",
+      "work: 0004",
+      "work: CU-40217732"
+    ]
+  },
+  "outputs": {
+    "new_share_suffix": "0004",
+    "confirmation_number": "CU-40217732"
+  },
+  "error": null,
+  "escalate": false,
+  "low_confidence_steps": [
+    "extract_new_share_suffix",
+    "extract_confirmation_number"
+  ],
+  "interventions": [
+    {
+      "request_id": "int-c3d48bb7",
+      "decision": "approved",
+      "operator": "sarab",
+      "note": null,
+      "human_actions": 0,
+      "waited_s": 157.3,
+      "trigger": "approval_needed",
+      "reason": "irreversible step requires a human decision",
+      "step": "click_confirm"
+    }
+  ],
+  "control_history": [
+    {
+      "from": "automation",
+      "to": "awaiting_human",
+      "by": "automation",
+      "reason": "approval_needed: irreversible step requires a human decision",
+      "at": "2026-10-19T04:16:49.298+00:00"
+    },
+    {
+      "from": "awaiting_human",
+      "to": "automation",
+      "by": "sarab",
+      "reason": "operator approved the step",
+      "at": "2026-10-19T04:19:26.638+00:00"
+    }
+  ],
+  "steps": [
+    {
+      "id": "fill_teller_user",
+      "action": "fill_secret",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "main",
+        "caption": "User ID:",
+        "row_key": "User ID:",
+        "field_name": "u"
+      },
+      "strategy": "caption",
+      "confidence": "high",
+      "tried": [
+        "caption:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 475
+    },
+    {
+      "id": "fill_teller_password",
+      "action": "fill_secret",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "main",
+        "caption": "Password:",
+        "row_key": "Password:",
+        "field_name": "p"
+      },
+      "strategy": "caption",
+      "confidence": "high",
+      "tried": [
+        "caption:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 422
+    },
+    {
+      "id": "click_sign_on",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "button",
+        "frame": "main",
+        "name": "Sign On"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 623
+    },
+    {
+      "id": "fill_member_number",
+      "action": "fill",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "work",
+        "caption": "Member #:",
+        "row_key": "Member #:",
+        "field_name": "q1"
+      },
+      "strategy": "caption",
+      "confidence": "high",
+      "tried": [
+        "caption:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 516
+    },
+    {
+      "id": "click_go",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "button",
+        "frame": "work",
+        "name": "Go"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 598
+    },
+    {
+      "id": "click_select",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "link",
+        "frame": "work",
+        "row_key": "12345",
+        "name": "Select"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 750
+    },
+    {
+      "id": "click_open_sub_account",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "button",
+        "frame": "work",
+        "name": "Open Sub-Account"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 621
+    },
+    {
+      "id": "select_share_type",
+      "action": "select",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "combobox",
+        "frame": "work",
+        "caption": "Share Type:",
+        "row_key": "Share Type:",
+        "field_name": "f1"
+      },
+      "strategy": "caption",
+      "confidence": "high",
+      "tried": [
+        "caption:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 397
+    },
+    {
+      "id": "fill_initial_deposit",
+      "action": "fill",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "work",
+        "caption": "Initial Deposit:",
+        "row_key": "Initial Deposit:",
+        "field_name": "f3"
+      },
+      "strategy": "caption",
+      "confidence": "high",
+      "tried": [
+        "caption:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 406
+    },
+    {
+      "id": "click_continue",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "button",
+        "frame": "work",
+        "name": "Continue"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 599
+    },
+    {
+      "id": "click_confirm",
+      "action": "click",
+      "actor": "automation",
+      "status": "needs_approval",
+      "detail": null,
+      "approved_by": null,
+      "matched": null,
+      "strategy": null,
+      "confidence": null,
+      "tried": [],
+      "attempts": 0,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 0
+    },
+    {
+      "id": "click_confirm",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": "sarab",
+      "matched": {
+        "kind": "control",
+        "role": "button",
+        "frame": "work",
+        "name": "Confirm"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 460
+    },
+    {
+      "id": "extract_new_share_suffix",
+      "action": "extract",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "text",
+        "role": "text",
+        "frame": "work"
+      },
+      "strategy": "css",
+      "confidence": "low",
+      "tried": [
+        "css:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [
+        "confirm dialog 'Post new share to member account? This cannot be undone.' was accepted"
+      ],
+      "duration_ms": 197
+    },
+    {
+      "id": "extract_confirmation_number",
+      "action": "extract",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "text",
+        "role": "text",
+        "frame": "work"
+      },
+      "strategy": "css",
+      "confidence": "low",
+      "tried": [
+        "css:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 190
+    }
+  ],
+  "run_id": "20261019T001638-replay-open-holiday-share",
+  "started_at": "2026-10-19T04:16:38.307+00:00",
+  "duration_ms": 169361
+}

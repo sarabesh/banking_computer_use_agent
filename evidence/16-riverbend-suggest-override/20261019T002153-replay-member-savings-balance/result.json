@@ -1,0 +1,220 @@
+{
+  "status": "success",
+  "capability": "member_savings_balance",
+  "version": "0.4.0",
+  "content_hash": "sha256:b549e39a36a41b1566033dc2ab61fcb29b1dc40d610b61012a0b38768fa7a533",
+  "outcome": null,
+  "tenant": "riverbend",
+  "tenant_note": "screen matches 'riverbend' (Riverbend Federal Credit Union) signature 1.00",
+  "override": null,
+  "warnings": [
+    "success_text_not_shown: expected any of ['Member Summary'] on the final screen"
+  ],
+  "final_screen": {
+    "frames": {
+      "main": "/main",
+      "work": "/w/member/12345"
+    },
+    "headings": [
+      "main: Riverbend Federal Credit Union | CoreLine Teller 7.6.0",
+      "main: Riverbend Federal Credit Union",
+      "main: M. Officer",
+      "main: Functions » Account Lookup » Logout",
+      "main: Functions",
+      "work: Account Holder Detail",
+      "work: Account Number:",
+      "work: Status:"
+    ]
+  },
+  "outputs": {
+    "savings_balance": "[REDACTED:output:savings_balance]"
+  },
+  "error": null,
+  "escalate": false,
+  "low_confidence_steps": [
+    "extract_savings_balance"
+  ],
+  "interventions": [],
+  "control_history": [],
+  "steps": [
+    {
+      "id": "fill_teller_user",
+      "action": "fill_secret",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "main",
+        "caption": "Operator:",
+        "row_key": "Operator:",
+        "field_name": "u"
+      },
+      "strategy": "field_name",
+      "confidence": "medium",
+      "tried": [
+        "caption:0",
+        "field_name:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 447
+    },
+    {
+      "id": "fill_teller_password",
+      "action": "fill_secret",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "main",
+        "caption": "PIN / Password:",
+        "row_key": "PIN / Password:",
+        "field_name": "p"
+      },
+      "strategy": "field_name",
+      "confidence": "medium",
+      "tried": [
+        "caption:0",
+        "field_name:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 388
+    },
+    {
+      "id": "click_sign_on",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "button",
+        "frame": "main",
+        "name": "Login"
+      },
+      "strategy": "form_submit",
+      "confidence": "high",
+      "tried": [
+        "role:0",
+        "form_submit:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 668
+    },
+    {
+      "id": "fill_member_number",
+      "action": "fill",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "work",
+        "caption": "Account Number:",
+        "row_key": "Account Number:",
+        "field_name": "q1"
+      },
+      "strategy": "field_name",
+      "confidence": "medium",
+      "tried": [
+        "caption:0",
+        "field_name:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 458
+    },
+    {
+      "id": "click_go",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "button",
+        "frame": "work",
+        "name": "Search"
+      },
+      "strategy": "form_submit",
+      "confidence": "high",
+      "tried": [
+        "role:0",
+        "form_submit:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 576
+    },
+    {
+      "id": "click_select",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "link",
+        "frame": "work",
+        "row_key": "12345",
+        "name": "Open"
+      },
+      "strategy": "row_control",
+      "confidence": "high",
+      "tried": [
+        "role:0",
+        "row_control:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 666
+    },
+    {
+      "id": "extract_savings_balance",
+      "action": "extract",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "text",
+        "role": "cell",
+        "frame": "work",
+        "col_header": "Current Bal",
+        "row_key": "0000"
+      },
+      "strategy": "css",
+      "confidence": "low",
+      "tried": [
+        "table_cell:0",
+        "css:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 209
+    }
+  ],
+  "run_id": "20261019T002153-replay-member-savings-balance",
+  "started_at": "2026-10-19T04:21:53.466+00:00",
+  "duration_ms": 9145
+}

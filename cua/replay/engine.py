@@ -24,7 +24,7 @@ from typing import Callable, TypeVar
 from ..artifact.schema import Capability, Step, Target
 from ..discovery.agent import render_observation
 from ..evidence import RunLog, utcnow
-from ..handoff import Control, Handoff, HandoffOutcome, InterventionRequest
+from ..handoff import Control, ControlState, Handoff, HandoffOutcome, InterventionRequest
 from ..policy import Policy
 from ..redact import Redactor
 from ..surface.base import ActionError, Observation, Surface
@@ -67,7 +67,8 @@ def parse_value(kind: str, raw: str) -> str:
 class Replayer:
     def __init__(self, surface: Surface, policy: Policy, runs_dir: Path, *, step_timeout: float = 10.0,
                  poll_interval: float = 0.3, echo: Callable[[str], None] = print,
-                 handoff: Handoff | None = None, max_interventions: int = 3):
+                 handoff: Handoff | None = None, max_interventions: int = 3,
+                 tenant_resolver=None):
         self.surface = surface
         self.policy = policy
         self.runs_dir = Path(runs_dir)
@@ -76,12 +77,20 @@ class Replayer:
         self.echo = echo
         self.handoff = handoff          # None: unattended. Escalations are returned to the caller.
         self.max_interventions = max_interventions
+        # cua.tenants.TenantResolver: on the first screen, before any step (so before anything is
+        # typed), decides which institution this is and applies that tenant's override.
+        self.tenant_resolver = tenant_resolver
 
     # ------------------------------------------------------------------ public
 
-    def run(self, cap: Capability, inputs: dict[str, str], *, base_url: str,
-            allow_draft: bool = False) -> ReplayResult:
+    def run(self, cap: Capability, inputs: dict[str, str], *, base_url: str, allow_draft: bool = False,
+            tenant: str | None = None, override_hash: str | None = None) -> ReplayResult:
+        """`cap` is the effective capability: the base, or the base with a tenant override applied
+        (cua.artifact.overrides.apply_override). Replay itself never knows the difference."""
         self.cap = cap
+        self.step_forms: dict[str, str | None] = {}
+        self.warnings: list[str] = []
+        self.tenant_note: str | None = None
         self.redactor = Redactor(self.policy, "logs")
         self.log = RunLog(self.runs_dir, "replay", cap.id, self.redactor)
         self.inputs = dict(inputs)
@@ -99,13 +108,15 @@ class Replayer:
             if spec.sensitive and name in inputs:
                 self.redactor.add_known(str(inputs[name]), f"input:{name}")
         self.log.event("replay_started", capability=cap.id, version=cap.version, content_hash=cap.content_hash,
-                       status=cap.status, allow_draft=allow_draft, base_url=base_url,
-                       inputs={k: v for k, v in inputs.items()})
+                       status=cap.status, allow_draft=allow_draft, base_url=base_url, tenant=tenant,
+                       override=override_hash, inputs={k: v for k, v in inputs.items()})
         try:
             try:
                 self._check_approval(allow_draft)
                 self._check_inputs()
                 self.surface.start(base_url.rstrip("/") + cap.app.entry_path)
+                if self.tenant_resolver is not None:
+                    tenant, override_hash = self._identify_tenant(allow_draft)
                 self._run_steps()
                 status, outcome, error, escalate = "success", None, None, False
             except _Stop as stop:
@@ -118,15 +129,28 @@ class Replayer:
                                                "reason": request.reason, "step": request.step,
                                                "decision": "returned_to_caller"})
             except ActionError as exc:
-                status, outcome, escalate = "failed", None, True
-                error = self._error("surface_error", str(exc), step=self.current.id if self.current else None)
+                # session_lost: the window was closed or the browser crashed. Not retried and not
+                # handed off - a new session means signing on again mid-flow, not known to be safe.
+                status, escalate = "failed", True
+                kind = "session_lost" if exc.kind == "session_lost" else "surface_error"
+                outcome = kind if kind == "session_lost" else None
+                error = self._error(kind, str(exc), step=self.current.id if self.current else None)
+                if self.control.state != ControlState.FINISHED:
+                    self.control.transition(ControlState.FINISHED, by="automation", reason=str(exc))
         except Exception as exc:  # a bug, not an app condition: record it, then let it surface
             self.log.event("crash", error=repr(exc))
             self.log.close()
             self.surface.close()
             raise
+        final_screen = {}
+        if self.last_obs is not None:
+            structure = self.last_obs.without_data()
+            final_screen = {"frames": dict(structure.location.frames),
+                            "headings": [h for h in structure.headings(10) if "‹value›" not in h]}
         result = ReplayResult(
             status=status, capability=cap.id, version=cap.version, content_hash=cap.content_hash,
+            tenant=tenant, tenant_note=self.tenant_note, override=override_hash, warnings=self.warnings,
+            final_screen=final_screen,
             outcome=outcome, outputs=self.outputs if status == "success" else {}, error=error, escalate=escalate,
             low_confidence_steps=[s.id for s in self.steps if s.confidence == "low"],
             interventions=self.interventions, control_history=self.control.history,
@@ -140,6 +164,23 @@ class Replayer:
         return result
 
     # ------------------------------------------------------------------ preconditions
+
+    def _identify_tenant(self, allow_draft: bool) -> tuple[str | None, str | None]:
+        """Which institution is on the screen decides which override applies - not the URL."""
+        self.last_obs = self.surface.observe()
+        try:
+            resolved = self.tenant_resolver.resolve(self.cap, self.last_obs)
+        except ValueError as exc:            # e.g. that tenant's override was reviewed against another base
+            raise _Stop("failed", escalate=True, error=self._error("override_invalid", str(exc)))
+        ident = resolved.identification
+        self.cap = resolved.capability
+        self.tenant_note = ident.note
+        self.log.event("tenant_identified", tenant=resolved.tenant, how=ident.how, note=ident.note,
+                       override=resolved.override_hash, registry_changed=ident.changed_registry)
+        if ident.how == "unidentified":
+            self.warnings.append(f"tenant_unidentified: {ident.note}")
+        self._check_approval(allow_draft)    # the override (if any) must be approved too
+        return resolved.tenant, resolved.override_hash
 
     def _check_approval(self, allow_draft: bool) -> None:
         if self.cap.status == "approved":
@@ -296,7 +337,7 @@ class Replayer:
         def showing(st: Step) -> bool:
             t = st.target
             on_screen = not frame_mismatches({t.frame: t.frame_path}, obs, self.inputs) or t.frame not in obs.location.frames
-            return on_screen and resolve(t, obs, self.inputs).element is not None
+            return on_screen and resolve(t, obs, self.inputs, self._form_of).element is not None
 
         here = max((n for n, (idx, _) in enumerate(groups) if idx <= current), default=0)
         for idx, st in groups[here:]:
@@ -321,7 +362,7 @@ class Replayer:
         obs = self._observe_handling_outcomes()
         for st in self.cap.steps[current:]:
             if st.action == "extract" and st.output not in self.outputs:
-                res = resolve(st.target, obs, self.inputs)
+                res = resolve(st.target, obs, self.inputs, self._form_of)
                 if res.element is not None:
                     self._extract(st, res.element.ref)
         return len(self.cap.steps)
@@ -369,6 +410,26 @@ class Replayer:
         self.echo(f"  [ok] {step.id:<28} via {sr.strategy or '-':<11} ({sr.confidence or '-'})"
                   f"{'  recovered: ' + ', '.join(sr.recovered) if sr.recovered else ''}")
 
+    @staticmethod
+    def _matched_facts(el) -> dict:
+        """What identified the element, never what it contains: a data cell's own text is left out."""
+        facts = {"kind": el.kind, "role": el.role, "frame": el.frame, "caption": el.caption,
+                 "col_header": el.col_header, "row_key": el.row_key, "field_name": el.field_name}
+        if el.kind == "control":
+            facts["name"] = el.name
+        return {k: v for k, v in facts.items() if v}
+
+    def _form_of(self, step_id: str, obs: Observation) -> str | None:
+        """The form holding the field that `step_id` used: from this run if it got that far,
+        otherwise by locating that step's field on the current screen."""
+        if step_id in self.step_forms:
+            return self.step_forms[step_id]
+        step = next((s for s in self.cap.steps if s.id == step_id), None)
+        if step is None or step.target is None:
+            return None
+        res = resolve(step.target, obs, self.inputs)
+        return res.element.form if res.element else None
+
     def _act_on_target(self, step: Step, sr: StepResult, deadline: float, approved: bool = False) -> None:
         target = step.target
         while True:
@@ -376,7 +437,7 @@ class Replayer:
                 if frame_mismatches({target.frame: target.frame_path}, obs, self.inputs) \
                         and target.frame in obs.location.frames:
                     return None
-                res = resolve(target, obs, self.inputs)
+                res = resolve(target, obs, self.inputs, self._form_of)
                 return res if res.element else None
 
             res = self._wait(ready, deadline)
@@ -386,6 +447,8 @@ class Replayer:
             sr.tried = [f"{by}:{n}" for by, n in res.tried]
             sr.attempts += 1
             el = res.element
+            sr.matched = self._matched_facts(el)
+            self.step_forms[step.id] = el.form
             self._enforce_policy(step, el, approved=approved)
             try:
                 if step.action == "click":
@@ -403,6 +466,8 @@ class Replayer:
                     self._extract(step, el.ref)
                 return
             except ActionError as exc:
+                if exc.kind == "session_lost":
+                    raise                                   # not an action problem: the session is gone
                 if exc.kind not in TRANSIENT or time.monotonic() > deadline:
                     raise _Stop("failed", error=self._error("action_failed", f"{exc.kind}: {exc}", step=step.id))
                 self.log.event("transient_action_error", step=step.id, kind=exc.kind)
@@ -411,7 +476,7 @@ class Replayer:
         try:
             fn()
         except ActionError as exc:
-            if raise_transient and exc.kind in TRANSIENT:
+            if exc.kind == "session_lost" or (raise_transient and exc.kind in TRANSIENT):
                 raise
             raise _Stop("failed", error=self._error("action_failed", f"{exc.kind}: {exc}", step=step.id))
         if step.requires_approval:
@@ -458,18 +523,22 @@ class Replayer:
         s = self.cap.success
         focus = next((st.target.frame for st in reversed(self.cap.steps) if st.target), None)
 
+        # Required (structural): the expected documents are showing, and every outcome rule is
+        # checked on each observation while we wait, so an error screen can never pass.
         def ok(obs: Observation):
-            return not frame_mismatches(s.frames, obs, self.inputs) and not missing_texts(s.texts, obs, focus) or None
+            return not frame_mismatches(s.frames, obs, self.inputs) or None
 
         if self._wait(ok, time.monotonic() + self.step_timeout) is None:
-            obs = self.last_obs
-            observed = frame_mismatches(s.frames, obs, self.inputs) + \
-                [f"text '{t}' not shown" for t in missing_texts(s.texts, obs, focus)]
             raise _Stop("failed", error=self._error(
                 "success_check_failed", "final screen does not match the success checkpoint",
-                expected=f"frames {s.frames}, texts {s.texts}", observed="; ".join(observed)))
+                expected=f"frames {s.frames}", observed="; ".join(frame_mismatches(s.frames, self.last_obs, self.inputs))))
         if missing := [o for o in s.outputs if o not in self.outputs]:
             raise _Stop("failed", error=self._error("success_check_failed", f"outputs not extracted: {missing}"))
+        # Corroborating (any-of): a different title is a drift signal, not a failure.
+        if s.texts and len(missing_texts(s.texts, self.last_obs, focus)) == len(s.texts):
+            warning = f"success_text_not_shown: expected any of {s.texts} on the final screen"
+            self.warnings.append(warning)
+            self.log.event("checkpoint_warning", warning=warning)
 
     # ------------------------------------------------------------------ waiting & outcomes
 
@@ -542,7 +611,7 @@ class Replayer:
             raise _Stop("failed", error=self._error(
                 "unexpected_screen", "the target's screen never appeared", step=step.id,
                 expected=f"{target.frame}={render(target.frame_path, self.inputs)}", observed="; ".join(mismatch)))
-        res = resolve(target, obs, self.inputs)
+        res = resolve(target, obs, self.inputs, self._form_of)
         kind = "ambiguous_element" if res.ambiguous else "element_not_found"
         raise _Stop("failed", error=self._error(
             kind, "no locator strategy matched exactly one element", step=step.id,

@@ -20,10 +20,10 @@ from ..discovery.trace import DiscoveryTrace, ParamDecl, TargetFingerprint, Trac
 from ..policy import Policy
 from .profile import AppProfile
 from .schema import (LOCATOR_CONFIDENCE, AppRef, CaptionLocator, Capability, CssLocator, Expect,
-                     FieldNameLocator, HrefLocator, InputSpec, OutputSpec, PositionLocator, Provenance,
-                     RoleLocator, Step, Success, TableCellLocator, Target)
+                     FieldNameLocator, FormSubmitLocator, HrefLocator, InputSpec, OutputSpec, PositionLocator,
+                     Provenance, RoleLocator, RowControlLocator, Step, Success, TableCellLocator, Target)
 
-COMPILER_VERSION = "0.1.0"
+COMPILER_VERSION = "0.2.0"     # 0.2.0: relational locators (row_control, form_submit)
 PLACEHOLDER_STRIP = re.compile(r"\{\{[^}]*\}\}")
 FIELD_ROLES = {"textbox", "combobox", "checkbox", "radio"}
 ACTIONS = {"type_text": "fill", "type_secret": "fill_secret", "click": "click", "select_option": "select",
@@ -78,9 +78,12 @@ def _locators(t: TargetFingerprint, canon: _Canon) -> list:
         locs.append(TableCellLocator(column=t.col_header, row_key=canon.value(t.row_key)))
     if t.caption and _usable(t.caption) and (t.role in FIELD_ROLES or is_data):
         locs.append(CaptionLocator(role=t.role, caption=t.caption))
+    in_table_row = bool(t.row_key) and t.row_key not in (t.name, t.caption) and _usable(t.row_key)
     if not is_data and _usable(t.name):
-        in_table_row = t.row_key and t.row_key not in (t.name, t.caption)
         locs.append(RoleLocator(role=t.role, name=t.name, row_key=canon.value(t.row_key) if in_table_row else None))
+    if not is_data and in_table_row and t.role in ("link", "button"):
+        # Label-independent twin of the role locator: survives the link being renamed.
+        locs.append(RowControlLocator(role=t.role, row_key=canon.value(t.row_key)))
     if t.field_name:
         locs.append(FieldNameLocator(tag=t.tag, field_name=t.field_name))
     if t.href and not urlsplit(t.href).scheme:
@@ -90,6 +93,32 @@ def _locators(t: TargetFingerprint, canon: _Canon) -> list:
     if t.bbox:
         locs.append(PositionLocator(bbox=[round(v) for v in t.bbox]))
     return locs
+
+
+STRUCTURAL = ("field_name", "href", "css", "position")
+
+
+def _add_relational(locs: list, loc) -> None:
+    """Relational locators go after the semantic ones and before the structural fallbacks."""
+    at = next((i for i, existing in enumerate(locs) if existing.by in STRUCTURAL), len(locs))
+    locs.insert(at, loc)
+
+
+def _is_submit(t: TargetFingerprint) -> bool:
+    # Traces recorded before perception reported is_submit fall back to the control's type.
+    return t.is_submit or t.input_type in ("submit", "image") or (t.tag == "button" and t.role == "button")
+
+
+def _recovery_rule(step: TraceStep, recoveries: list) -> str | None:
+    """The recoverable outcome rule whose recovery control this click hit, if any."""
+    if step.action != "click" or step.target is None:
+        return None
+    name = " ".join(step.target.name.split()).casefold()
+    for rule in recoveries:
+        target = rule.recover.target
+        if step.target.role == target.role and name == " ".join(target.name.split()).casefold():
+            return rule.code
+    return None
 
 
 def _changed_frames(step: TraceStep, canon: _Canon) -> dict[str, str]:
@@ -108,11 +137,14 @@ def compile_trace(trace: DiscoveryTrace, profile: AppProfile, *, capability_id: 
         raise CompileError("trace has no final state to build a success checkpoint from")
 
     canon = _Canon(trace.parameters)
+    recoveries = [r for r in profile.outcomes
+                  if r.kind == "recoverable" and r.recover.action == "click" and r.recover.target is not None]
     warnings: list[str] = []
     skipped: list[str] = []
     steps: list[Step] = []
     visited: set[str] = set()
     used_ids: set[str] = set()
+    fields_on_screen: list[tuple[str, TargetFingerprint]] = []   # (step id, target) of filled fields
 
     for s in trace.steps:
         visited.update(s.before.frames.values())
@@ -122,6 +154,13 @@ def compile_trace(trace: DiscoveryTrace, profile: AppProfile, *, capability_id: 
             skipped.append(f"#{s.index} {s.action} ({s.status}{': ' + s.detail if s.detail else ''})")
             continue
         action = ACTIONS[s.action]
+        recovery = _recovery_rule(s, recoveries)
+        if recovery is not None:
+            # e.g. the agent acknowledged a maintenance notice: a runtime condition, not part of
+            # the procedure. Replay handles it through the outcome rule whenever it appears.
+            skipped.append(f"#{s.index} click '{s.target.name}': a recovery action, handled by outcome rule "
+                           f"'{recovery}' at replay")
+            continue
         if action in ("fill", "select") and not (s.parameter or s.literal):
             # e.g. an operator typed a credential during a handoff: value deliberately not captured
             skipped.append(f"#{s.index} {s.action} by {s.actor} ({s.detail or 'no value recorded'})")
@@ -142,6 +181,17 @@ def compile_trace(trace: DiscoveryTrace, profile: AppProfile, *, capability_id: 
         while step_id in used_ids:
             step_id, n = f"{base}_{n}", n + 1
         used_ids.add(step_id)
+
+        if target is not None and action == "click" and _is_submit(s.target):
+            # "The button that submits the form whose field step X filled": same frame, same
+            # screen and, when perception knows it, the same form.
+            field = next((sid for sid, ft in reversed(fields_on_screen)
+                          if ft.frame == s.target.frame and ft.frame_path == s.target.frame_path
+                          and (not s.target.form or not ft.form or ft.form == s.target.form)), None)
+            if field:
+                _add_relational(target.locators, FormSubmitLocator(of_step=field))
+        if target is not None and action in ("fill", "fill_secret", "select"):
+            fields_on_screen.append((step_id, s.target))
 
         value = f"{{{{{s.parameter}}}}}" if s.parameter else s.literal
         changed = _changed_frames(s, canon)
@@ -183,6 +233,7 @@ def compile_trace(trace: DiscoveryTrace, profile: AppProfile, *, capability_id: 
         inputs=inputs, outputs=outputs, secrets=sorted({s.secret for s in steps if s.secret}),
         steps=steps, outcomes=profile.rules_for(visited), success=success,
         provenance=Provenance(discovered_by=trace.model, run_id=trace.run_id, discovered_at=trace.started_at,
+                              discovered_at_tenant=trace.tenant,
                               goal=goal, trace_sha256=trace_sha256, compiler_version=COMPILER_VERSION),
     )
     return CompileReport(capability=cap, warnings=warnings, skipped=skipped)

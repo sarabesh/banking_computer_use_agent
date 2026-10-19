@@ -1,0 +1,25 @@
+{"seq": 1, "ts": "2026-10-19T04:16:05.245+00:00", "type": "replay_started", "capability": "open_holiday_share", "version": "0.1.0", "content_hash": "sha256:2cb8c080e4cdb2f3ebce2e6f296a58e27f5d25ed47f3c42c6d0d0ac7a49286ff", "status": "approved", "allow_draft": false, "base_url": "http://127.0.0.1:5001", "tenant": null, "override": null, "inputs": {"member_number": "12345", "share_type": "XMAS - Holiday Club", "initial_deposit": "25.00"}}
+{"seq": 2, "ts": "2026-10-19T04:16:11.732+00:00", "type": "tenant_identified", "tenant": "acme", "how": "matched", "note": "screen matches 'acme' (Acme Community Credit Union) signature 1.00", "override": null, "registry_changed": false}
+{"seq": 3, "ts": "2026-10-19T04:16:11.732+00:00", "type": "step_started", "step": "fill_teller_user", "action": "fill_secret", "approved_by": null}
+{"seq": 4, "ts": "2026-10-19T04:16:12.236+00:00", "type": "step_ok", "step": "fill_teller_user", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 503}
+{"seq": 5, "ts": "2026-10-19T04:16:12.239+00:00", "type": "step_started", "step": "fill_teller_password", "action": "fill_secret", "approved_by": null}
+{"seq": 6, "ts": "2026-10-19T04:16:12.656+00:00", "type": "step_ok", "step": "fill_teller_password", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 417}
+{"seq": 7, "ts": "2026-10-19T04:16:12.657+00:00", "type": "step_started", "step": "click_sign_on", "action": "click", "approved_by": null}
+{"seq": 8, "ts": "2026-10-19T04:16:13.373+00:00", "type": "step_ok", "step": "click_sign_on", "strategy": "role", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 716}
+{"seq": 9, "ts": "2026-10-19T04:16:13.374+00:00", "type": "step_started", "step": "fill_member_number", "action": "fill", "approved_by": null}
+{"seq": 10, "ts": "2026-10-19T04:16:13.890+00:00", "type": "step_ok", "step": "fill_member_number", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 516}
+{"seq": 11, "ts": "2026-10-19T04:16:13.891+00:00", "type": "step_started", "step": "click_go", "action": "click", "approved_by": null}
+{"seq": 12, "ts": "2026-10-19T04:16:14.502+00:00", "type": "step_ok", "step": "click_go", "strategy": "role", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 610}
+{"seq": 13, "ts": "2026-10-19T04:16:14.502+00:00", "type": "step_started", "step": "click_select", "action": "click", "approved_by": null}
+{"seq": 14, "ts": "2026-10-19T04:16:15.205+00:00", "type": "step_ok", "step": "click_select", "strategy": "role", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 702}
+{"seq": 15, "ts": "2026-10-19T04:16:15.206+00:00", "type": "step_started", "step": "click_open_sub_account", "action": "click", "approved_by": null}
+{"seq": 16, "ts": "2026-10-19T04:16:15.828+00:00", "type": "step_ok", "step": "click_open_sub_account", "strategy": "role", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 622}
+{"seq": 17, "ts": "2026-10-19T04:16:15.828+00:00", "type": "step_started", "step": "select_share_type", "action": "select", "approved_by": null}
+{"seq": 18, "ts": "2026-10-19T04:16:16.227+00:00", "type": "step_ok", "step": "select_share_type", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 398}
+{"seq": 19, "ts": "2026-10-19T04:16:16.227+00:00", "type": "step_started", "step": "fill_initial_deposit", "action": "fill", "approved_by": null}
+{"seq": 20, "ts": "2026-10-19T04:16:16.645+00:00", "type": "step_ok", "step": "fill_initial_deposit", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 417}
+{"seq": 21, "ts": "2026-10-19T04:16:16.645+00:00", "type": "step_started", "step": "click_continue", "action": "click", "approved_by": null}
+{"seq": 22, "ts": "2026-10-19T04:16:17.203+00:00", "type": "step_ok", "step": "click_continue", "strategy": "role", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 557}
+{"seq": 23, "ts": "2026-10-19T04:16:17.203+00:00", "type": "step_started", "step": "click_confirm", "action": "click", "approved_by": null}
+{"seq": 24, "ts": "2026-10-19T04:16:17.287+00:00", "type": "replay_error", "kind": "policy_blocked", "message": "irreversible step requires a human decision", "step": "click_confirm", "expected": null, "observed": null, "screenshot": "failure-click_confirm.jpg", "snapshot": "failure-click_confirm.txt"}
+{"seq": 25, "ts": "2026-10-19T04:16:17.341+00:00", "type": "replay_finished", "status": "needs_approval", "outcome": null, "error": {"kind": "policy_blocked", "message": "irreversible step requires a human decision", "step": "click_confirm", "expected": null, "observed": null, "screenshot": "failure-click_confirm.jpg", "snapshot": "failure-click_confirm.txt"}, "escalate": true, "duration_ms": 12093}

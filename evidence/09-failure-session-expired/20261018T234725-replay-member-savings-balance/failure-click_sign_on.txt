@@ -1,0 +1,6 @@
+Observation #5  title='CoreLine Teller'  frames: main=/main
+
+[frame main /main]
+  e1 cell "Session Expired"
+  e2 text "SEC-440 Your session has timed out due to inactivity. Please sign on again."
+  e3 link "Sign On"

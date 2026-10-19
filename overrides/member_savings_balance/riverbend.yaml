@@ -1,0 +1,29 @@
+# Tenant override: 'member_savings_balance' at tenant 'riverbend'.
+# Only how things are found here differs from the base. Review, then set status: approved.
+override_version: '1'
+capability: member_savings_balance
+tenant: riverbend
+base_version: 0.4.0
+base_hash: sha256:b549e39a36a41b1566033dc2ab61fcb29b1dc40d610b61012a0b38768fa7a533
+status: approved
+description: Suggested from a supervised replay at riverbend. Review every locator before approving.
+steps:
+  fill_teller_user:
+    locators:
+    - {by: caption, role: textbox, caption: 'Operator:'}
+  fill_teller_password:
+    locators:
+    - {by: caption, role: textbox, caption: 'PIN / Password:'}
+  fill_member_number:
+    locators:
+    - {by: caption, role: textbox, caption: 'Account Number:'}
+  extract_savings_balance:
+    locators:
+    - {by: table_cell, column: Current Bal, row_key: '0000'}
+success:
+  texts: [Account Holder Detail]
+provenance:
+  created_at: '2026-10-19T04:22:03.228+00:00'
+  suggested_from_run: 20261019T002153-replay-member-savings-balance
+  notes: ['fill_teller_user: found via field_name (medium) -> suggest by=caption, role=textbox, caption=Operator:', 'fill_teller_password: found via field_name (medium) -> suggest by=caption, role=textbox, caption=PIN / Password:', 'fill_member_number: found via field_name (medium) -> suggest by=caption, role=textbox, caption=Account Number:', 'extract_savings_balance: found via css (low) -> suggest by=table_cell, column=Current Bal, row_key=0000', 'success: the final screen is titled ''Account Holder Detail'' here, not [''Member Summary'']']
+content_hash: sha256:1efc208e43146600ef799925ca6ca7ba00a3de556cc2093978aaf6b0f5f86b2f

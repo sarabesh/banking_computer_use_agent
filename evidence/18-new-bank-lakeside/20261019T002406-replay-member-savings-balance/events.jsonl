@@ -1,0 +1,17 @@
+{"seq": 1, "ts": "2026-10-19T04:24:06.718+00:00", "type": "replay_started", "capability": "member_savings_balance", "version": "0.4.0", "content_hash": "sha256:b549e39a36a41b1566033dc2ab61fcb29b1dc40d610b61012a0b38768fa7a533", "status": "approved", "allow_draft": false, "base_url": "http://127.0.0.1:5003", "tenant": null, "override": null, "inputs": {"member_number": "12345"}}
+{"seq": 2, "ts": "2026-10-19T04:24:12.376+00:00", "type": "tenant_identified", "tenant": "lakeside_savings_bank", "how": "registered", "note": "new institution 'Lakeside Savings Bank' registered as tenant 'lakeside_savings_bank' (auto_registered: review the entry); closest registered was 'acme' at 0.58", "override": null, "registry_changed": true}
+{"seq": 3, "ts": "2026-10-19T04:24:12.378+00:00", "type": "step_started", "step": "fill_teller_user", "action": "fill_secret", "approved_by": null}
+{"seq": 4, "ts": "2026-10-19T04:24:12.857+00:00", "type": "step_ok", "step": "fill_teller_user", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 478}
+{"seq": 5, "ts": "2026-10-19T04:24:12.858+00:00", "type": "step_started", "step": "fill_teller_password", "action": "fill_secret", "approved_by": null}
+{"seq": 6, "ts": "2026-10-19T04:24:13.246+00:00", "type": "step_ok", "step": "fill_teller_password", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 388}
+{"seq": 7, "ts": "2026-10-19T04:24:13.247+00:00", "type": "step_started", "step": "click_sign_on", "action": "click", "approved_by": null}
+{"seq": 8, "ts": "2026-10-19T04:24:13.928+00:00", "type": "step_ok", "step": "click_sign_on", "strategy": "role", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 681}
+{"seq": 9, "ts": "2026-10-19T04:24:13.928+00:00", "type": "step_started", "step": "fill_member_number", "action": "fill", "approved_by": null}
+{"seq": 10, "ts": "2026-10-19T04:24:14.415+00:00", "type": "step_ok", "step": "fill_member_number", "strategy": "caption", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 486}
+{"seq": 11, "ts": "2026-10-19T04:24:14.415+00:00", "type": "step_started", "step": "click_go", "action": "click", "approved_by": null}
+{"seq": 12, "ts": "2026-10-19T04:24:15.044+00:00", "type": "step_ok", "step": "click_go", "strategy": "role", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 628}
+{"seq": 13, "ts": "2026-10-19T04:24:15.044+00:00", "type": "step_started", "step": "click_select", "action": "click", "approved_by": null}
+{"seq": 14, "ts": "2026-10-19T04:24:15.768+00:00", "type": "step_ok", "step": "click_select", "strategy": "role", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 724}
+{"seq": 15, "ts": "2026-10-19T04:24:15.768+00:00", "type": "step_started", "step": "extract_savings_balance", "action": "extract", "approved_by": null}
+{"seq": 16, "ts": "2026-10-19T04:24:15.987+00:00", "type": "step_ok", "step": "extract_savings_balance", "strategy": "table_cell", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 218}
+{"seq": 17, "ts": "2026-10-19T04:24:16.211+00:00", "type": "replay_finished", "status": "success", "outcome": null, "error": null, "escalate": false, "duration_ms": 9489}

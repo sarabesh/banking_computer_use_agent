@@ -1,0 +1,18 @@
+{"seq": 1, "ts": "2026-10-19T04:21:53.466+00:00", "type": "replay_started", "capability": "member_savings_balance", "version": "0.4.0", "content_hash": "sha256:b549e39a36a41b1566033dc2ab61fcb29b1dc40d610b61012a0b38768fa7a533", "status": "approved", "allow_draft": true, "base_url": "http://127.0.0.1:5002", "tenant": null, "override": null, "inputs": {"member_number": "12345"}}
+{"seq": 2, "ts": "2026-10-19T04:21:59.005+00:00", "type": "tenant_identified", "tenant": "riverbend", "how": "matched", "note": "screen matches 'riverbend' (Riverbend Federal Credit Union) signature 1.00", "override": null, "registry_changed": false}
+{"seq": 3, "ts": "2026-10-19T04:21:59.006+00:00", "type": "step_started", "step": "fill_teller_user", "action": "fill_secret", "approved_by": null}
+{"seq": 4, "ts": "2026-10-19T04:21:59.453+00:00", "type": "step_ok", "step": "fill_teller_user", "strategy": "field_name", "confidence": "medium", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 447}
+{"seq": 5, "ts": "2026-10-19T04:21:59.454+00:00", "type": "step_started", "step": "fill_teller_password", "action": "fill_secret", "approved_by": null}
+{"seq": 6, "ts": "2026-10-19T04:21:59.842+00:00", "type": "step_ok", "step": "fill_teller_password", "strategy": "field_name", "confidence": "medium", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 388}
+{"seq": 7, "ts": "2026-10-19T04:21:59.843+00:00", "type": "step_started", "step": "click_sign_on", "action": "click", "approved_by": null}
+{"seq": 8, "ts": "2026-10-19T04:22:00.511+00:00", "type": "step_ok", "step": "click_sign_on", "strategy": "form_submit", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 668}
+{"seq": 9, "ts": "2026-10-19T04:22:00.511+00:00", "type": "step_started", "step": "fill_member_number", "action": "fill", "approved_by": null}
+{"seq": 10, "ts": "2026-10-19T04:22:00.970+00:00", "type": "step_ok", "step": "fill_member_number", "strategy": "field_name", "confidence": "medium", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 458}
+{"seq": 11, "ts": "2026-10-19T04:22:00.970+00:00", "type": "step_started", "step": "click_go", "action": "click", "approved_by": null}
+{"seq": 12, "ts": "2026-10-19T04:22:01.546+00:00", "type": "step_ok", "step": "click_go", "strategy": "form_submit", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 576}
+{"seq": 13, "ts": "2026-10-19T04:22:01.547+00:00", "type": "step_started", "step": "click_select", "action": "click", "approved_by": null}
+{"seq": 14, "ts": "2026-10-19T04:22:02.214+00:00", "type": "step_ok", "step": "click_select", "strategy": "row_control", "confidence": "high", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 666}
+{"seq": 15, "ts": "2026-10-19T04:22:02.214+00:00", "type": "step_started", "step": "extract_savings_balance", "action": "extract", "approved_by": null}
+{"seq": 16, "ts": "2026-10-19T04:22:02.423+00:00", "type": "step_ok", "step": "extract_savings_balance", "strategy": "css", "confidence": "low", "attempts": 1, "recovered": [], "dialogs": [], "duration_ms": 209}
+{"seq": 17, "ts": "2026-10-19T04:22:02.611+00:00", "type": "checkpoint_warning", "warning": "success_text_not_shown: expected any of ['Member Summary'] on the final screen"}
+{"seq": 18, "ts": "2026-10-19T04:22:02.614+00:00", "type": "replay_finished", "status": "success", "outcome": null, "error": null, "escalate": false, "duration_ms": 9145}

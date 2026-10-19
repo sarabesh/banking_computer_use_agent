@@ -19,7 +19,7 @@ import getpass
 import json
 from pathlib import Path
 
-from .handoff import Inbox, InterventionResponse
+from .handoff import Inbox, InterventionResponse, allowed_now
 
 
 def add_parser(sub, root: Path) -> None:
@@ -61,6 +61,14 @@ def run(args: argparse.Namespace) -> int:
     status = inbox.status(req.id)
     if status.get("closed"):
         print(f"{req.id} is already closed ({status.get('decision')}).")
+        return 1
+    possible = allowed_now(status.get("control", ""), req.allowed)
+    if action not in possible:
+        # Don't claim success for a command the automation will ignore.
+        commands = sorted({"take_control": "take", "dialog_accept": "dialog", "dialog_dismiss": "dialog"}.get(a, a)
+                          for a in possible)
+        print(f"'{args.command}' is not possible for {req.id} right now (trigger: {req.trigger}, "
+              f"control: {status.get('control', '?')}). Possible: {', '.join(commands) or 'nothing'}.")
         return 1
     dialog_id = None
     if args.command == "dialog":

@@ -11,10 +11,24 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Literal
 
+from ..surface.base import ActionError
 from .control import Control, ControlError, ControlState
 from .inbox import Inbox, InterventionRequest, InterventionResponse
 
 Decision = Literal["resumed", "done", "approved", "rejected", "aborted", "timeout"]
+
+
+def allowed_now(control_state: str, request_allowed: list[str]) -> set[str]:
+    """Operator commands that are possible in this control state - the one rule the automation
+    enforces and the operator CLI checks before sending. While waiting: the request's own options
+    (take control / approve / reject / abort). While a human has control: hand back, answer a
+    dialog, abort - and "done" if the request offers it."""
+    offered = set(request_allowed)
+    if control_state == ControlState.AWAITING_HUMAN.value:
+        return offered - {"resume", "done"}
+    if control_state == ControlState.HUMAN.value:
+        return {"resume", "abort", "dialog_accept", "dialog_dismiss"} | ({"done"} & offered)
+    return set()
 
 
 @dataclass
@@ -50,6 +64,24 @@ class Handoff:
         self.echo(f"\n  >> HUMAN NEEDED [{request.id}] {request.trigger}: {request.reason}\n"
                   f"     operator: python -m cua operator take {request.id}   (allowed: {', '.join(request.allowed)})\n")
         t0 = time.monotonic()
+        try:
+            return self._wait_for_operator(request, surface, control, log, t0)
+        except ActionError as exc:
+            if exc.kind != "session_lost":
+                raise
+            # The live session died while paused or while the human held it (e.g. the window
+            # was closed). Close the request so nobody keeps working on a session that is gone.
+            events = surface.stop_recording()
+            if control.state != ControlState.FINISHED:
+                control.transition(ControlState.FINISHED, by="automation", reason=str(exc))
+            self._status(request, control, surface, decision="session_lost", closed=True, reason=str(exc))
+            log.event("intervention_closed", request_id=request.id, decision="session_lost",
+                      human_actions=len(events), reason=str(exc))
+            self.echo(f"  >> live session lost during intervention {request.id}: {exc}")
+            raise
+
+    def _wait_for_operator(self, request: InterventionRequest, surface: Any, control: Control, log: Any,
+                           t0: float) -> HandoffOutcome:
         state_since = t0
         seen = 0
         while True:
@@ -79,13 +111,7 @@ class Handoff:
     def _apply(self, resp: InterventionResponse, request: InterventionRequest, surface: Any, control: Control,
                log: Any, t0: float) -> HandoffOutcome | None:
         state = control.state
-        # While waiting: the request's own options (take control / approve / reject / abort).
-        # While a human has control: hand back, answer a dialog, abort - and "done" if offered.
-        allowed_now = {
-            ControlState.AWAITING_HUMAN: set(request.allowed) - {"resume", "done"},
-            ControlState.HUMAN: {"resume", "abort", "dialog_accept", "dialog_dismiss"} | ({"done"} & set(request.allowed)),
-        }.get(state, set())
-        if resp.action not in allowed_now:
+        if resp.action not in allowed_now(state.value, request.allowed):
             log.event("operator_response_ignored", action=resp.action, state=state.value, operator=resp.operator)
             return None
         log.event("operator_response", action=resp.action, operator=resp.operator, note=resp.note)

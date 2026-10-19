@@ -37,6 +37,8 @@ class TargetFingerprint(BaseModel):
     row_key: str | None = None
     css: str | None = None
     bbox: list[float] | None = None
+    form: str | None = None
+    is_submit: bool = False
 
 
 class LocationSnapshot(BaseModel):
@@ -103,6 +105,7 @@ class DiscoveryTrace(BaseModel):
     run_id: str
     goal: str
     start_url: str
+    tenant: str | None = None         # derived from start_url by the registry; never shown to the model
     model: str
     started_at: str
     finished_at: str | None = None

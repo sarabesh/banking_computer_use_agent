@@ -95,6 +95,7 @@ class WebSurface:
         self._human_events: list[dict] = []
         self._pending_dialogs: dict[int, Dialog] = {}
         self._dialog_seq = 0
+        self._lost: str | None = None           # why the live session is gone (window closed, crash)
 
     # ------------------------------------------------------------------ lifecycle
 
@@ -102,6 +103,7 @@ class WebSurface:
         decision = self.policy.check_url(url)
         if not decision.allowed:
             raise ActionError("blocked", f"start URL refused: {decision.reason}")
+        self._lost = None
         self._pw = sync_playwright().start()
         self._browser = self._pw.chromium.launch(headless=self.headless)
         self.context = self._browser.new_context(viewport={"width": 1280, "height": 800})
@@ -109,13 +111,32 @@ class WebSurface:
         self.context.expose_binding("__cua_record", self._on_record)
         self.context.add_init_script(RECORDER_JS)
         self.page = self.context.new_page()
+        # A closed window, context or browser ends the live session; every later call reports it.
+        self.page.on("close", lambda _p: self._mark_lost("the browser page was closed"))
+        self.page.on("crash", lambda _p: self._mark_lost("the browser page crashed"))
+        self._browser.on("disconnected", lambda _b: self._mark_lost("the browser was closed"))
         self.page.on("dialog", self._on_dialog)
         self.page.on("request", self._on_request_start)
         self.page.on("requestfinished", self._on_request_end)
         self.page.on("requestfailed", self._on_request_end)
         self.page.goto(url, wait_until="load", timeout=self.load_timeout_ms)
 
+    def _mark_lost(self, reason: str) -> None:
+        if self._lost is None:
+            self._lost = reason
+
+    def _alive(self) -> None:
+        if self._lost:
+            raise ActionError("session_lost", f"the live session was lost: {self._lost}")
+
+    def _closed_error(self, exc: PlaywrightError) -> bool:
+        """Was this Playwright error caused by the session going away?"""
+        if "has been closed" in exc.message or "Target closed" in exc.message:
+            self._mark_lost("the browser page, context or browser was closed")
+        return self._lost is not None
+
     def close(self) -> None:
+        self._lost = self._lost or "closed by the run"
         for closer in (self.context, self._browser):
             try:
                 if closer:
@@ -192,7 +213,13 @@ class WebSurface:
 
     def pump(self, ms: int) -> None:
         """Wait while keeping the browser's event loop running (recording, dialogs)."""
-        self.page.wait_for_timeout(ms)
+        self._alive()
+        try:
+            self.page.wait_for_timeout(ms)
+        except PlaywrightError as exc:
+            if self._closed_error(exc):
+                self._alive()
+            raise
 
     # ------------------------------------------------------------------ perception
 
@@ -203,15 +230,22 @@ class WebSurface:
         'load' because the new request has not started yet. So: give the action a moment to
         start requests, wait for in-flight document requests to drain, then for every frame's
         load event."""
-        self.page.wait_for_timeout(150)
-        deadline = time.monotonic() + self.load_timeout_ms / 1000
-        while self._inflight_docs and time.monotonic() < deadline:
-            self.page.wait_for_timeout(50)
+        self._alive()
+        try:
+            self.page.wait_for_timeout(150)
+            deadline = time.monotonic() + self.load_timeout_ms / 1000
+            while self._inflight_docs and time.monotonic() < deadline:
+                self.page.wait_for_timeout(50)
+        except PlaywrightError as exc:
+            if self._closed_error(exc):
+                self._alive()
+            raise
         for frame in self.page.frames:
             try:
                 frame.wait_for_load_state("load", timeout=max(1, int((deadline - time.monotonic()) * 1000)))
             except (PlaywrightTimeout, PlaywrightError):
                 pass
+        self._alive()
 
     def _frame_name(self, frame: Frame, index: int) -> str:
         if frame == self.page.main_frame:
@@ -244,6 +278,7 @@ class WebSurface:
         return results
 
     def observe(self) -> Observation:
+        self._alive()
         self._seq += 1
         self._handles = {}
         elements: list[Element] = []
@@ -254,6 +289,7 @@ class WebSurface:
                 index = item.pop("i")
                 elements.append(Element(ref=ref, frame=fname, frame_path=fpath, **item))
                 self._handles[ref] = (frame, index, self._seq)
+        self._alive()          # frames vanishing because the window closed is not "an empty screen"
         obs = Observation(seq=self._seq, location=self.location(), elements=elements,
                           dialogs=self._dialogs, blocked_requests=self._blocked)
         self._dialogs, self._blocked = [], []
@@ -262,6 +298,7 @@ class WebSurface:
     # ------------------------------------------------------------------ actions
 
     def _handle(self, ref: str):
+        self._alive()
         if ref not in self._handles:
             raise ActionError("stale_ref", f"unknown ref '{ref}': use a ref from the latest observation")
         frame, index, _seq = self._handles[ref]
@@ -284,6 +321,8 @@ class WebSurface:
                 raise ActionError("not_editable", "the element is not an editable field")
             raise ActionError("timeout", f"timed out waiting for the element to be actionable: {msg.splitlines()[0]}")
         except PlaywrightError as exc:
+            if self._closed_error(exc):
+                self._alive()
             raise ActionError("other", exc.message.splitlines()[0])
         self._settle()
 
@@ -349,6 +388,7 @@ class WebSurface:
     def screenshot(self, path: str | None, mask_patterns: list[str], mask_data: bool = False) -> bytes:
         """Screenshot with sensitive text blacked out in-page before capture. mask_data=True
         (used for persisted evidence) also blacks out every data value and field content."""
+        self._alive()
         frames = [f for f in self.page.frames if not f.is_detached()]
         for frame in frames:
             try:

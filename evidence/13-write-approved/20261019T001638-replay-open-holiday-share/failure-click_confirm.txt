@@ -1,0 +1,26 @@
+Observation #16  title='CoreLine Teller - Acme Community Credit Union'  frames: main=/main, work=/w/member/12345/open/review
+
+[frame main /main]
+  e1 text "Acme Community Credit Union | CoreLine Teller 7.4.2"
+  e2 text "Acme Community Credit Union"
+  e3 text "M. Officer"
+  e4 cell "Functions » Member Inquiry » Sign Off"
+  e5 text "Functions"
+  e6 link "Member Inquiry"
+  e7 link "Sign Off"
+
+[frame work /w/member/12345/open/review]
+  e8 cell "Review New Sub-Account"
+  e9 text "Please verify the following before posting. This action cannot be reversed."
+  e10 text "Member #"
+  e11 cell "‹value›" caption="Member #"
+  e12 text "Name"
+  e13 cell "‹value›" caption="Name"
+  e14 text "Share Type"
+  e15 cell "‹value›" caption="Share Type"
+  e16 text "Nickname"
+  e17 cell "‹value›" caption="Nickname"
+  e18 text "Initial Deposit"
+  e19 cell "‹value›" caption="Initial Deposit"
+  e20 button "Confirm"
+  e21 link "Back"

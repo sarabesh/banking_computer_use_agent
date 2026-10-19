@@ -57,6 +57,21 @@ class TableCellLocator(_Model):
     row_key: str
 
 
+class RowControlLocator(_Model):
+    """Relational, label-independent: the only control of this role in the table row whose
+    key is row_key ("the link in the {{member_number}} row"), whatever its text says."""
+    by: Literal["row_control"] = "row_control"
+    role: str
+    row_key: str
+
+
+class FormSubmitLocator(_Model):
+    """Relational, label-independent: the submit control of the form that holds the field
+    used by step `of_step` ("the button that submits the search form"), whatever its text."""
+    by: Literal["form_submit"] = "form_submit"
+    of_step: str
+
+
 class FieldNameLocator(_Model):
     """The form field's name attribute: stable in server-rendered apps, meaningless to humans."""
     by: Literal["field_name"] = "field_name"
@@ -81,12 +96,12 @@ class PositionLocator(_Model):
     bbox: list[int] = Field(min_length=4, max_length=4)
 
 
-Locator = Annotated[Union[RoleLocator, CaptionLocator, TableCellLocator, FieldNameLocator,
-                          HrefLocator, CssLocator, PositionLocator], Field(discriminator="by")]
+Locator = Annotated[Union[RoleLocator, CaptionLocator, TableCellLocator, RowControlLocator, FormSubmitLocator,
+                          FieldNameLocator, HrefLocator, CssLocator, PositionLocator], Field(discriminator="by")]
 
 # Confidence is a property of the strategy, not of one instance of it.
 LOCATOR_CONFIDENCE: dict[str, Confidence] = {
-    "role": "high", "caption": "high", "table_cell": "high",
+    "role": "high", "caption": "high", "table_cell": "high", "row_control": "high", "form_submit": "high",
     "field_name": "medium", "href": "medium",
     "css": "low", "position": "low",
 }
@@ -190,7 +205,10 @@ class OutcomeRule(_Model):
 
 
 class Success(_Model):
-    """The checkpoint: replay reports success only if all of this holds at the end."""
+    """The checkpoint. Structural and required: every frame shows its expected document, every
+    output was extracted, and no outcome rule fired. `texts` are any-of corroborating
+    evidence: if none is shown (e.g. another tenant titles the screen differently) the run
+    still succeeds, with a warning, so drift degrades gracefully instead of failing."""
     frames: dict[str, str]
     texts: list[str] = Field(default_factory=list)
     outputs: list[str] = Field(default_factory=list)
@@ -210,6 +228,7 @@ class Provenance(_Model):
     discovered_by: str
     run_id: str
     discovered_at: str
+    discovered_at_tenant: str | None = None     # the institution whose system the flow was recorded on
     goal: str
     trace_sha256: str | None = None
     compiler_version: str
@@ -239,6 +258,10 @@ class Capability(_Model):
         ids = [s.id for s in self.steps]
         if len(ids) != len(set(ids)):
             problems.append("step ids must be unique")
+        for n, step in enumerate(self.steps):
+            for loc in (step.target.locators if step.target else []):
+                if loc.by == "form_submit" and loc.of_step not in ids[:n]:
+                    problems.append(f"step '{step.id}': form_submit refers to '{loc.of_step}', not an earlier step")
         used = set(PLACEHOLDER.findall(json.dumps(self.model_dump(mode="json", exclude={"provenance"}))))
         if undeclared := used - set(self.inputs):
             problems.append(f"templates reference undeclared inputs {sorted(undeclared)}")
@@ -307,7 +330,7 @@ class Capability(_Model):
 # Flags that are noise at their default value. Omitting them is lossless: loading restores
 # the default, and the content hash is computed on the full model, not on the YAML text.
 _QUIET_DEFAULTS = {"requires_approval": False, "escalate": False, "screens": [],
-                   "only_if_no_side_effects": False, "required": True}
+                   "only_if_no_side_effects": False, "required": True, "outcomes": []}
 
 
 def _prune(value):

@@ -7,6 +7,8 @@ allowed_origins:
   - http://127.0.0.1:5002
   - http://localhost:5001
   - http://localhost:5002
+  - http://127.0.0.1:5003          # Lakeside Savings Bank: the "not registered yet" demo tenant
+  - http://localhost:5003
 
 # Paths that are never reachable, even on an allowed origin.
 # /__control is the mock app's fault-injection harness: not part of the application. Not allowed for LLM reasoning, because it would be a security hole to let the model control the harness.

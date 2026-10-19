@@ -141,19 +141,32 @@ def test_bad_inputs_rejected_before_touching_the_app(capability, tmp_path):
     assert "unknown inputs" in result.error.message
 
 
-def test_other_tenant_degrades_to_fallbacks_and_detects_drift(capability, tmp_path):
-    """Riverbend runs the same product with different labels and column order. Semantic
-    locators miss, structural fallbacks carry the flow, and the success checkpoint catches
-    that the screen is not what was recorded: drift is reported, never silently accepted."""
-    result, run_dir = replay(capability, tmp_path, tenant="riverbend")
-    snapshot = (run_dir / result.error.snapshot).read_text(encoding="utf-8")
-    assert "Avery" not in snapshot and "Quinn" not in snapshot     # names have no regex; structure-only snapshot
-    assert "Account Holder" in snapshot and "‹value›" in snapshot   # labels kept, values replaced
+def test_other_tenant_degrades_gracefully_with_no_tenant_knowledge(capability, tmp_path):
+    """Riverbend runs the same product with different labels and column order. The base
+    capability, unchanged: relational locators find the buttons and the row link whatever
+    they're called; captions and the balance column fall back to weaker strategies; the run
+    succeeds but reports exactly which steps were weak and that the screen title differs."""
+    result, _ = replay(capability, tmp_path, tenant="riverbend")
+    assert result.status == "success", result.error
+    assert result.outputs == {"savings_balance": "1523.47"}
     strategies = {s.id: s.strategy for s in result.steps}
+    assert strategies["click_sign_on"] == "form_submit" and strategies["click_go"] == "form_submit"   # 'Login' / 'Search'
+    assert strategies["click_select"] == "row_control"           # link text 'Open'
     assert strategies["fill_member_number"] == "field_name"      # caption 'Account Number:' differs
-    assert strategies["click_select"] == "href"                   # link text 'Open' differs
-    assert result.low_confidence_steps                            # e.g. 'Search' button via css
-    assert result.status == "failed" and result.error.kind == "success_check_failed"
+    assert result.low_confidence_steps == ["extract_savings_balance"]   # column 'Current Bal', reordered
+    assert any(w.startswith("success_text_not_shown") for w in result.warnings)
+
+
+def test_failure_snapshot_keeps_structure_not_data(capability, tmp_path):
+    data = capability.model_dump(mode="json")
+    extract = next(s for s in data["steps"] if s["action"] == "extract")
+    extract["target"]["locators"] = [{"by": "table_cell", "column": "No Such Column", "row_key": "0000"}]
+    broken = type(capability).model_validate(data)
+    result, run_dir = replay(broken, tmp_path)
+    assert result.error.kind == "element_not_found" and result.error.step == "extract_savings_balance"
+    snapshot = (run_dir / result.error.snapshot).read_text(encoding="utf-8")
+    assert "Avery" not in snapshot and "Quinn" not in snapshot and "Elm St" not in snapshot   # no regex for names
+    assert "Member Summary" in snapshot and "‹value›" in snapshot   # labels kept, values replaced
 
 
 def test_evidence_masking_hides_data_values_but_keeps_labels(tmp_path):

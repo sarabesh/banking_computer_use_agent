@@ -1,0 +1,946 @@
+{
+  "trace_version": "1",
+  "run_id": "20261019T000052-discover-open-a-new-holiday-club-sub-account-for-",
+  "goal": "Open a new Holiday Club sub-account for member 12345 with an initial deposit of 25 dollars, and post it",
+  "start_url": "http://127.0.0.1:5001/login",
+  "tenant": "acme",
+  "model": "claude-opus-5-5",
+  "started_at": "2026-10-19T04:00:52.061+00:00",
+  "finished_at": "2026-10-19T04:04:11.516+00:00",
+  "status": "success",
+  "summary": "Opened a Holiday Club (XMAS) sub-account for member 12345 with a [REDACTED:money] initial deposit. Operator approved the Confirm step and it was posted. Captured the new share suffix and the confirmation number.",
+  "parameters": [
+    {
+      "name": "member_number",
+      "type": "string",
+      "description": "Member number to open the sub-account for",
+      "sensitive": false,
+      "example": "12345",
+      "enum_values": null
+    },
+    {
+      "name": "share_type",
+      "type": "enum",
+      "description": "Share type of the new sub-account",
+      "sensitive": false,
+      "example": "XMAS - Holiday Club",
+      "enum_values": [
+        "-- select --",
+        "REG - Regular Savings",
+        "XMAS - Holiday Club",
+        "MMKT - Money Market"
+      ]
+    },
+    {
+      "name": "initial_deposit",
+      "type": "decimal",
+      "description": "Initial deposit amount in dollars",
+      "sensitive": false,
+      "example": "25.00",
+      "enum_values": null
+    }
+  ],
+  "outputs": [
+    {
+      "name": "new_share_suffix",
+      "type": "string",
+      "description": "Suffix of the newly opened sub-account",
+      "sensitive": false
+    },
+    {
+      "name": "confirmation_number",
+      "type": "string",
+      "description": "Confirmation number of the sub-account opening",
+      "sensitive": false
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "action": "type_secret",
+      "reason": "Sign on with teller user ID.",
+      "actor": "agent",
+      "target": {
+        "kind": "control",
+        "role": "textbox",
+        "name": "",
+        "frame": "main",
+        "frame_path": "/login",
+        "tag": "input",
+        "caption": "User ID:",
+        "field_name": "u",
+        "dom_id": null,
+        "input_type": "text",
+        "href": null,
+        "synthetic": false,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": "User ID:",
+        "css": "body > center:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > form:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(2) > input:nth-of-type(1)",
+        "bbox": [
+          548.0,
+          144.0,
+          163.0,
+          21.0
+        ],
+        "form": "body > center:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > form:nth-of-type(1)",
+        "is_submit": false
+      },
+      "parameter": null,
+      "literal": null,
+      "secret": "teller_user",
+      "key": null,
+      "seconds": null,
+      "output": null,
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 1,
+      "before": {
+        "url": "/login",
+        "title": "CoreLine Teller - Teller Sign On",
+        "frames": {
+          "main": "/login"
+        }
+      },
+      "after": {
+        "url": "/login",
+        "title": "CoreLine Teller - Teller Sign On",
+        "frames": {
+          "main": "/login"
+        }
+      },
+      "screen_changed": true,
+      "dialogs": []
+    },
+    {
+      "index": 1,
+      "action": "type_secret",
+      "reason": "Enter teller password.",
+      "actor": "agent",
+      "target": {
+        "kind": "control",
+        "role": "textbox",
+        "name": "",
+        "frame": "main",
+        "frame_path": "/login",
+        "tag": "input",
+        "caption": "Password:",
+        "field_name": "p",
+        "dom_id": null,
+        "input_type": "password",
+        "href": null,
+        "synthetic": false,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": "Password:",
+        "css": "body > center:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > form:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(2) > input:nth-of-type(1)",
+        "bbox": [
+          548.0,
+          173.0,
+          163.0,
+          21.0
+        ],
+        "form": "body > center:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > form:nth-of-type(1)",
+        "is_submit": false
+      },
+      "parameter": null,
+      "literal": null,
+      "secret": "teller_password",
+      "key": null,
+      "seconds": null,
+      "output": null,
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 2,
+      "before": {
+        "url": "/login",
+        "title": "CoreLine Teller - Teller Sign On",
+        "frames": {
+          "main": "/login"
+        }
+      },
+      "after": {
+        "url": "/login",
+        "title": "CoreLine Teller - Teller Sign On",
+        "frames": {
+          "main": "/login"
+        }
+      },
+      "screen_changed": true,
+      "dialogs": []
+    },
+    {
+      "index": 2,
+      "action": "click",
+      "reason": "Submit sign on.",
+      "actor": "agent",
+      "target": {
+        "kind": "control",
+        "role": "button",
+        "name": "Sign On",
+        "frame": "main",
+        "frame_path": "/login",
+        "tag": "input",
+        "caption": null,
+        "field_name": null,
+        "dom_id": null,
+        "input_type": "submit",
+        "href": null,
+        "synthetic": false,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": null,
+        "css": "body > center:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > form:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(2) > input:nth-of-type(1)",
+        "bbox": [
+          548.0,
+          202.0,
+          64.0,
+          21.0
+        ],
+        "form": "body > center:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1) > form:nth-of-type(1)",
+        "is_submit": true
+      },
+      "parameter": null,
+      "literal": null,
+      "secret": null,
+      "key": null,
+      "seconds": null,
+      "output": null,
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 3,
+      "before": {
+        "url": "/login",
+        "title": "CoreLine Teller - Teller Sign On",
+        "frames": {
+          "main": "/login"
+        }
+      },
+      "after": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/search"
+        }
+      },
+      "screen_changed": true,
+      "dialogs": []
+    },
+    {
+      "index": 3,
+      "action": "type_text",
+      "reason": "Look up the member.",
+      "actor": "agent",
+      "target": {
+        "kind": "control",
+        "role": "textbox",
+        "name": "",
+        "frame": "work",
+        "frame_path": "/w/search",
+        "tag": "input",
+        "caption": "Member #:",
+        "field_name": "q1",
+        "dom_id": null,
+        "input_type": "text",
+        "href": null,
+        "synthetic": false,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": "Member #:",
+        "css": "body > form:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(2) > input:nth-of-type(1)",
+        "bbox": [
+          90.0,
+          43.0,
+          107.0,
+          21.0
+        ],
+        "form": "body > form:nth-of-type(1)",
+        "is_submit": false
+      },
+      "parameter": "member_number",
+      "literal": null,
+      "secret": null,
+      "key": null,
+      "seconds": null,
+      "output": null,
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 4,
+      "before": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/search"
+        }
+      },
+      "after": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/search"
+        }
+      },
+      "screen_changed": true,
+      "dialogs": []
+    },
+    {
+      "index": 4,
+      "action": "click",
+      "reason": "Search for the member.",
+      "actor": "agent",
+      "target": {
+        "kind": "control",
+        "role": "button",
+        "name": "Go",
+        "frame": "work",
+        "frame_path": "/w/search",
+        "tag": "input",
+        "caption": null,
+        "field_name": null,
+        "dom_id": null,
+        "input_type": "submit",
+        "href": null,
+        "synthetic": false,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": null,
+        "css": "body > form:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(2) > input:nth-of-type(1)",
+        "bbox": [
+          90.0,
+          97.0,
+          34.0,
+          21.0
+        ],
+        "form": "body > form:nth-of-type(1)",
+        "is_submit": true
+      },
+      "parameter": null,
+      "literal": null,
+      "secret": null,
+      "key": null,
+      "seconds": null,
+      "output": null,
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 5,
+      "before": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/search"
+        }
+      },
+      "after": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/results"
+        }
+      },
+      "screen_changed": true,
+      "dialogs": []
+    },
+    {
+      "index": 5,
+      "action": "click",
+      "reason": "Open the member record.",
+      "actor": "agent",
+      "target": {
+        "kind": "control",
+        "role": "link",
+        "name": "Select",
+        "frame": "work",
+        "frame_path": "/w/results",
+        "tag": "a",
+        "caption": null,
+        "field_name": null,
+        "dom_id": null,
+        "input_type": null,
+        "href": "/w/member/12345",
+        "synthetic": false,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": "12345",
+        "css": "body > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(5) > a:nth-of-type(1)",
+        "bbox": [
+          326.0,
+          67.0,
+          32.0,
+          14.0
+        ],
+        "form": null,
+        "is_submit": false
+      },
+      "parameter": null,
+      "literal": null,
+      "secret": null,
+      "key": null,
+      "seconds": null,
+      "output": null,
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 6,
+      "before": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/results"
+        }
+      },
+      "after": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345"
+        }
+      },
+      "screen_changed": true,
+      "dialogs": []
+    },
+    {
+      "index": 6,
+      "action": "click",
+      "reason": "Start opening a new sub-account.",
+      "actor": "agent",
+      "target": {
+        "kind": "control",
+        "role": "button",
+        "name": "Open Sub-Account",
+        "frame": "work",
+        "frame_path": "/w/member/12345",
+        "tag": "div",
+        "caption": null,
+        "field_name": null,
+        "dom_id": null,
+        "input_type": null,
+        "href": null,
+        "synthetic": true,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": null,
+        "css": "body > div:nth-of-type(1)",
+        "bbox": [
+          6.0,
+          238.0,
+          126.0,
+          22.0
+        ],
+        "form": null,
+        "is_submit": false
+      },
+      "parameter": null,
+      "literal": null,
+      "secret": null,
+      "key": null,
+      "seconds": null,
+      "output": null,
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 7,
+      "before": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345"
+        }
+      },
+      "after": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open"
+        }
+      },
+      "screen_changed": true,
+      "dialogs": []
+    },
+    {
+      "index": 7,
+      "action": "select_option",
+      "reason": "Choose Holiday Club share type.",
+      "actor": "agent",
+      "target": {
+        "kind": "control",
+        "role": "combobox",
+        "name": "",
+        "frame": "work",
+        "frame_path": "/w/member/12345/open",
+        "tag": "select",
+        "caption": "Share Type:",
+        "field_name": "f1",
+        "dom_id": null,
+        "input_type": null,
+        "href": null,
+        "synthetic": false,
+        "options": [
+          "-- select --",
+          "REG - Regular Savings",
+          "XMAS - Holiday Club",
+          "MMKT - Money Market"
+        ],
+        "selected": "-- select --",
+        "col_header": null,
+        "row_key": "Share Type:",
+        "css": "body > form:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(2) > select:nth-of-type(1)",
+        "bbox": [
+          107.0,
+          43.0,
+          161.0,
+          19.0
+        ],
+        "form": "body > form:nth-of-type(1)",
+        "is_submit": false
+      },
+      "parameter": "share_type",
+      "literal": null,
+      "secret": null,
+      "key": null,
+      "seconds": null,
+      "output": null,
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 8,
+      "before": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open"
+        }
+      },
+      "after": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open"
+        }
+      },
+      "screen_changed": false,
+      "dialogs": []
+    },
+    {
+      "index": 8,
+      "action": "type_text",
+      "reason": "Enter the initial deposit amount.",
+      "actor": "agent",
+      "target": {
+        "kind": "control",
+        "role": "textbox",
+        "name": "",
+        "frame": "work",
+        "frame_path": "/w/member/12345/open",
+        "tag": "input",
+        "caption": "Initial Deposit:",
+        "field_name": "f3",
+        "dom_id": null,
+        "input_type": "text",
+        "href": null,
+        "synthetic": false,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": "Initial Deposit:",
+        "css": "body > form:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(2) > input:nth-of-type(1)",
+        "bbox": [
+          118.0,
+          95.0,
+          121.0,
+          21.0
+        ],
+        "form": "body > form:nth-of-type(1)",
+        "is_submit": false
+      },
+      "parameter": "initial_deposit",
+      "literal": null,
+      "secret": null,
+      "key": null,
+      "seconds": null,
+      "output": null,
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 9,
+      "before": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open"
+        }
+      },
+      "after": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open"
+        }
+      },
+      "screen_changed": true,
+      "dialogs": []
+    },
+    {
+      "index": 9,
+      "action": "click",
+      "reason": "Proceed to review step.",
+      "actor": "agent",
+      "target": {
+        "kind": "control",
+        "role": "button",
+        "name": "Continue",
+        "frame": "work",
+        "frame_path": "/w/member/12345/open",
+        "tag": "input",
+        "caption": null,
+        "field_name": null,
+        "dom_id": null,
+        "input_type": "submit",
+        "href": null,
+        "synthetic": false,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": null,
+        "css": "body > form:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(4) > td:nth-of-type(2) > input:nth-of-type(1)",
+        "bbox": [
+          107.0,
+          122.0,
+          69.0,
+          21.0
+        ],
+        "form": "body > form:nth-of-type(1)",
+        "is_submit": true
+      },
+      "parameter": null,
+      "literal": null,
+      "secret": null,
+      "key": null,
+      "seconds": null,
+      "output": null,
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 10,
+      "before": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open"
+        }
+      },
+      "after": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open/review"
+        }
+      },
+      "screen_changed": true,
+      "dialogs": []
+    },
+    {
+      "index": 10,
+      "action": "click",
+      "reason": "The Holiday Club sub-account for member 12345 with a [REDACTED:money] initial deposit is on the review screen; posting requires clicking the irreversible Confirm button, which needs human approval.",
+      "actor": "agent",
+      "target": {
+        "kind": "control",
+        "role": "button",
+        "name": "Confirm",
+        "frame": "work",
+        "frame_path": "/w/member/12345/open/review",
+        "tag": "input",
+        "caption": null,
+        "field_name": null,
+        "dom_id": null,
+        "input_type": "submit",
+        "href": null,
+        "synthetic": false,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": null,
+        "css": "body > form:nth-of-type(1) > input:nth-of-type(1)",
+        "bbox": [
+          6.0,
+          194.0,
+          63.0,
+          21.0
+        ],
+        "form": "body > form:nth-of-type(1)",
+        "is_submit": true
+      },
+      "parameter": null,
+      "literal": null,
+      "secret": null,
+      "key": null,
+      "seconds": null,
+      "output": null,
+      "status": "ok",
+      "detail": "irreversible; approved by operator sarab",
+      "policy": {
+        "verdict": "needs_approval",
+        "reason": "'Confirm' is classified irreversible"
+      },
+      "observation_seq": 11,
+      "before": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open/review"
+        }
+      },
+      "after": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open/confirm"
+        }
+      },
+      "screen_changed": false,
+      "dialogs": []
+    },
+    {
+      "index": 11,
+      "action": "extract",
+      "reason": "Capture the new sub-account identifier.",
+      "actor": "agent",
+      "target": {
+        "kind": "text",
+        "role": "text",
+        "name": "0003",
+        "frame": "work",
+        "frame_path": "/w/member/12345/open/confirm",
+        "tag": "b",
+        "caption": null,
+        "field_name": null,
+        "dom_id": null,
+        "input_type": null,
+        "href": null,
+        "synthetic": false,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": null,
+        "css": "body > b:nth-of-type(1)",
+        "bbox": [
+          40.0,
+          40.0,
+          31.0,
+          14.0
+        ],
+        "form": null,
+        "is_submit": false
+      },
+      "parameter": null,
+      "literal": null,
+      "secret": null,
+      "key": null,
+      "seconds": null,
+      "output": "new_share_suffix",
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 13,
+      "before": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open/confirm"
+        }
+      },
+      "after": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open/confirm"
+        }
+      },
+      "screen_changed": false,
+      "dialogs": []
+    },
+    {
+      "index": 12,
+      "action": "extract",
+      "reason": "Capture the posting confirmation number.",
+      "actor": "agent",
+      "target": {
+        "kind": "text",
+        "role": "text",
+        "name": "CU-40217731",
+        "frame": "work",
+        "frame_path": "/w/member/12345/open/confirm",
+        "tag": "b",
+        "caption": null,
+        "field_name": null,
+        "dom_id": null,
+        "input_type": null,
+        "href": null,
+        "synthetic": false,
+        "options": [],
+        "selected": null,
+        "col_header": null,
+        "row_key": null,
+        "css": "body > b:nth-of-type(2)",
+        "bbox": [
+          94.0,
+          68.0,
+          83.0,
+          14.0
+        ],
+        "form": null,
+        "is_submit": false
+      },
+      "parameter": null,
+      "literal": null,
+      "secret": null,
+      "key": null,
+      "seconds": null,
+      "output": "confirmation_number",
+      "status": "ok",
+      "detail": null,
+      "policy": {
+        "verdict": "allow",
+        "reason": "permitted by policy"
+      },
+      "observation_seq": 14,
+      "before": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open/confirm"
+        }
+      },
+      "after": {
+        "url": "/main",
+        "title": "CoreLine Teller - Acme Community Credit Union",
+        "frames": {
+          "main": "/main",
+          "work": "/w/member/12345/open/confirm"
+        }
+      },
+      "screen_changed": false,
+      "dialogs": []
+    }
+  ],
+  "final": {
+    "location": {
+      "url": "/main",
+      "title": "CoreLine Teller - Acme Community Credit Union",
+      "frames": {
+        "main": "/main",
+        "work": "/w/member/12345/open/confirm"
+      }
+    },
+    "headings": [
+      "main: Acme Community Credit Union | CoreLine Teller 7.4.2",
+      "main: Acme Community Credit Union",
+      "main: M. Officer",
+      "main: Functions » Member Inquiry » Sign Off",
+      "main: Functions",
+      "work: Share has been added to member 12345. Confirmation #:"
+    ],
+    "success_evidence": "The work frame shows the 'Sub-Account Opened' heading, a message that a new share was added to member 12345, and a confirmation number.",
+    "business_outcome": null
+  },
+  "interventions": [
+    {
+      "request_id": "int-2a6f2622",
+      "decision": "approved",
+      "operator": "sarab",
+      "note": null,
+      "human_actions": 0,
+      "waited_s": 150.5,
+      "trigger": "approval_needed",
+      "reason": "approval_needed: The Holiday Club sub-account for member 12345 with a [REDACTED:money] initial deposit is on the review screen; posting requires clicking the irreversible Confirm button, which needs human approval."
+    }
+  ],
+  "control_history": [
+    {
+      "from": "automation",
+      "to": "awaiting_human",
+      "by": "automation",
+      "reason": "approval_needed: approval_needed: The Holiday Club sub-account for member 12345 with a [REDACTED:money] initial deposit is on the review screen; posting requires clicking the irreversible Confirm button, which needs human approval.",
+      "at": "2026-10-19T04:01:30.703+00:00"
+    },
+    {
+      "from": "awaiting_human",
+      "to": "automation",
+      "by": "sarab",
+      "reason": "operator approved the step",
+      "at": "2026-10-19T04:04:01.162+00:00"
+    }
+  ],
+  "usage": {
+    "model_turns": 14,
+    "input_tokens": 30,
+    "output_tokens": 1789,
+    "cache_read_input_tokens": 209818,
+    "cache_creation_input_tokens": 29979
+  }
+}

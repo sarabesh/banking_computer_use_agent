@@ -21,6 +21,8 @@ ErrorKind = Literal[
     "policy_blocked", "output_parse_error", "success_check_failed",
     "outcome_failure", "recovery_exhausted", "unsafe_to_retry", "surface_error",
     "operator_rejected", "operator_aborted", "escalation_timeout", "resume_failed",   # human handoff
+    "session_lost",          # the live browser was closed or crashed: nothing left to act on or hand over
+    "override_invalid",      # the identified tenant's override does not fit this capability version
 ]
 
 
@@ -31,6 +33,9 @@ class StepResult(BaseModel):
     status: Literal["ok", "failed", "needs_approval"] = "failed"
     detail: str | None = None
     approved_by: str | None = None       # operator who approved an irreversible step
+    # Locator-relevant facts of the element that matched (labels, column, row key, frame) -
+    # never a data value. Lets `override suggest` turn a fallback match into a semantic locator.
+    matched: dict | None = None
     strategy: str | None = None          # which locator matched
     confidence: str | None = None
     tried: list[str] = Field(default_factory=list)    # e.g. ["caption:0", "field_name:1"]
@@ -56,6 +61,11 @@ class ReplayResult(BaseModel):
     version: str
     content_hash: str | None = None
     outcome: str | None = None           # business or failure code from the outcome rules
+    tenant: str | None = None            # identified from the first screen, not from the URL
+    tenant_note: str | None = None       # how: matched / moved to a new URL / newly registered
+    override: str | None = None          # content hash of the tenant override applied, if any
+    warnings: list[str] = Field(default_factory=list)   # e.g. success text not shown (drift signal)
+    final_screen: dict = Field(default_factory=dict)     # frames + top headings, structure only
     outputs: dict[str, str] = Field(default_factory=dict)   # typed values, serialised as strings
     error: ReplayError | None = None
     escalate: bool = False               # a human should look at this

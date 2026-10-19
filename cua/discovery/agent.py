@@ -149,12 +149,16 @@ class DiscoveryAgent:
 
     # ------------------------------------------------------------------ run
 
-    def run(self, goal: str, start_url: str, *, keep_open: bool = False) -> DiscoveryResult:
+    def run(self, goal: str, start_url: str, *, keep_open: bool = False, tenant: str | None = None,
+            identify: Callable[[Observation], Any] | None = None) -> DiscoveryResult:
+        """The model is given the goal and the URL, nothing else about where it is. `identify`
+        (cua.tenants.TenantRegistry.identify bound to the URL) decides from the first screen which
+        institution this is - registering it if new - and is only recorded in the trace."""
         self.log_redactor = Redactor(self.policy, "logs")
         self.model_redactor = Redactor(self.policy, "model")
         log = RunLog(self.runs_dir, "discover", goal, self.log_redactor)
         self.log = log
-        trace = DiscoveryTrace(run_id=log.run_id, goal=goal, start_url=start_url,
+        trace = DiscoveryTrace(run_id=log.run_id, goal=goal, start_url=start_url, tenant=tenant,
                                model=getattr(self.model, "name", "unknown"), started_at=utcnow())
         self.trace = trace
         self.control = Control(on_change=lambda rec: log.event("control_transferred", **rec))
@@ -168,6 +172,10 @@ class DiscoveryAgent:
             self.surface.start(start_url)
             state = _RunState(obs=self.surface.observe())
             self._record_observation(state)
+            if identify is not None:
+                ident = identify(state.obs)
+                trace.tenant = ident.tenant.id if ident.tenant else None
+                log.event("tenant_identified", tenant=trace.tenant, how=ident.how, note=ident.note)
             messages: list[dict] = [{"role": "user", "content": self._initial_content(goal, start_url, state)}]
             while True:
                 if len(trace.steps) >= self.max_steps:
@@ -481,6 +489,10 @@ class DiscoveryAgent:
         shot = self.log.path(f"intervention-{len(self.trace.steps):02d}.jpg")
         self.surface.screenshot(str(shot), self.log_redactor.js_patterns, mask_data=True)
         gate = self._pending_gate if kind == "approval_needed" else None
+        if kind == "approval_needed" and gate is None:
+            # The agent asked BEFORE attempting the action: approval is for the one irreversible
+            # control on this screen, as classified by the policy (not by the model).
+            gate = self._irreversible_on_screen(state, reason)
         request = InterventionRequest(
             run_id=self.trace.run_id, run_kind="discovery", goal=self.trace.goal,
             trigger="approval_needed" if gate else "stuck", reason=self.log_redactor.text(f"{kind}: {reason}"),
@@ -508,6 +520,19 @@ class DiscoveryAgent:
         self.trace.status, self.trace.summary = "escalated", f"{kind}: {reason}"
         self.trace.final = self._final_state(state.obs)
         return None
+
+    def _irreversible_on_screen(self, state: _RunState, reason: str) -> tuple[TraceStep, str, str | None] | None:
+        """The single control on screen the policy classifies as irreversible, recorded as the
+        step awaiting approval. None if there is no such control, or more than one (ambiguous)."""
+        candidates = [e for e in state.obs.elements
+                      if e.kind == "control" and self.policy.is_irreversible_label(e.name)]
+        if len(candidates) != 1:
+            return None
+        el = candidates[0]
+        decision = Decision(verdict="needs_approval", reason=f"'{el.name}' is classified irreversible")
+        step = self._step(state, "click", reason, el, decision, status="needs_approval", detail=decision.reason)
+        self.log.event("policy_verdict", action="click", verdict="needs_approval", reason=decision.reason)
+        return step, "click", None
 
     def _after_handoff(self, state: _RunState, note: str) -> str:
         state.no_change_streak = state.error_streak = state.nudges = 0

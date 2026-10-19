@@ -113,6 +113,24 @@ def test_only_successful_runs_compile(tmp_path, live_app, policy, secrets_env):
         compile_trace(trace, PROFILE)
 
 
+def test_recovery_clicks_during_discovery_are_not_compiled_as_steps(tmp_path, live_app, policy, secrets_env):
+    """A notice appeared on every page during discovery and the agent acknowledged it each time.
+    Those clicks are runtime recoveries (outcome rule system_notice), not the procedure: the
+    capability must not contain them, or every notice-free replay would fail."""
+    app, base = live_app
+    app.config["FAULTS"].update({"interstitial_rate": 1.0})
+    ack = lambda o: ("click", {"ref": ref(o, role="button", name="Acknowledge"), "reason": R})  # noqa: E731
+    script = LOGIN + [ack, LOOKUP[0], LOOKUP[1], ack, LOOKUP[2], ack] + EXTRACT_AND_FINISH
+    trace = run(tmp_path, policy, base, script).trace
+    assert trace.status == "success"
+    assert sum(1 for s in trace.steps if s.target and s.target.name == "Acknowledge") == 3
+    report = compile_trace(trace, PROFILE, capability_id="member_savings_balance", policy=policy)
+    assert not any("acknowledge" in s.id for s in report.capability.steps)
+    assert [s.action for s in report.capability.steps] == \
+        ["fill_secret", "fill_secret", "click", "fill", "press", "click", "extract"]
+    assert sum("handled by outcome rule 'system_notice'" in line for line in report.skipped) == 3
+
+
 def test_profile_file_is_valid_yaml_with_ordered_kinds():
     rules = yaml.safe_load((ROOT / "apps" / "coreline_teller.yaml").read_text())["outcomes"]
     kinds = [r["kind"] for r in rules]

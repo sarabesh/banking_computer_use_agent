@@ -1,9 +1,0 @@
-{
-  "request_id": "int-c2d7b5fb",
-  "updated_at": "2026-10-18T16:47:38.402+00:00",
-  "control": "automation",
-  "holder": "automation",
-  "pending_dialogs": [],
-  "decision": "resumed",
-  "closed": true
-}

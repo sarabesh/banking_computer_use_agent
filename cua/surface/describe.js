@@ -142,8 +142,15 @@ function cuaHelpers() {
     return visible(el);
   };
 
+  // Relational facts (label-independent): which form an element belongs to, and whether it
+  // is that form's submit control. Lets a locator say "the button that submits this form".
+  const formOf = el => (el.form || el.closest('form'));
+  const submitOf = form => form ? form.querySelector(
+    'input[type=submit], input[type=image], button:not([type=button]):not([type=reset])') : null;
+
   const describe = el => {
     const control = el.matches(CONTROL_SEL);
+    const form = control ? formOf(el) : null;
     const tag = el.tagName.toLowerCase();
     const role = roleOf(el);
     const full = clean(el.innerText);
@@ -168,6 +175,8 @@ function cuaHelpers() {
       css: cssPath(el),
       bbox: [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)],
       occluded: occluded(el),
+      form: form ? cssPath(form) : null,
+      is_submit: !!form && submitOf(form) === el,
       ...tableContext(el),
     };
   };

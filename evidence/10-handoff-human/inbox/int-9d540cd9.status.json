@@ -1,0 +1,9 @@
+{
+  "request_id": "int-9d540cd9",
+  "updated_at": "2026-10-19T03:51:09.516+00:00",
+  "control": "automation",
+  "holder": "automation",
+  "pending_dialogs": [],
+  "decision": "resumed",
+  "closed": true
+}

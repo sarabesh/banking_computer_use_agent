@@ -1,0 +1,262 @@
+{
+  "status": "success",
+  "capability": "member_savings_balance",
+  "version": "0.4.0",
+  "content_hash": "sha256:b549e39a36a41b1566033dc2ab61fcb29b1dc40d610b61012a0b38768fa7a533",
+  "outcome": null,
+  "tenant": "acme",
+  "tenant_note": "screen matches 'acme' (Acme Community Credit Union) signature 1.00",
+  "override": null,
+  "warnings": [],
+  "final_screen": {
+    "frames": {
+      "main": "/main",
+      "work": "/w/member/12345"
+    },
+    "headings": [
+      "main: Acme Community Credit Union | CoreLine Teller 7.4.2",
+      "main: Acme Community Credit Union",
+      "main: M. Officer",
+      "main: Functions » Member Inquiry » Sign Off",
+      "main: Functions",
+      "work: Member Summary",
+      "work: Member #:",
+      "work: Status:"
+    ]
+  },
+  "outputs": {
+    "savings_balance": "[REDACTED:output:savings_balance]"
+  },
+  "error": null,
+  "escalate": false,
+  "low_confidence_steps": [],
+  "interventions": [
+    {
+      "request_id": "int-9d540cd9",
+      "decision": "resumed",
+      "operator": "sarab",
+      "note": null,
+      "human_actions": 1,
+      "waited_s": 170.5,
+      "trigger": "unrecoverable",
+      "reason": "'app_error' persisted after 2 recoveries [app_error]",
+      "step": "click_sign_on"
+    }
+  ],
+  "control_history": [
+    {
+      "from": "automation",
+      "to": "awaiting_human",
+      "by": "automation",
+      "reason": "unrecoverable: 'app_error' persisted after 2 recoveries [app_error]",
+      "at": "2026-10-19T03:48:19.051+00:00"
+    },
+    {
+      "from": "awaiting_human",
+      "to": "human",
+      "by": "sarab",
+      "reason": "operator took control",
+      "at": "2026-10-19T03:49:16.742+00:00"
+    },
+    {
+      "from": "human",
+      "to": "automation",
+      "by": "sarab",
+      "reason": "operator handed control back",
+      "at": "2026-10-19T03:51:09.516+00:00"
+    }
+  ],
+  "steps": [
+    {
+      "id": "fill_teller_user",
+      "action": "fill_secret",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "main",
+        "caption": "User ID:",
+        "row_key": "User ID:",
+        "field_name": "u"
+      },
+      "strategy": "caption",
+      "confidence": "high",
+      "tried": [
+        "caption:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 479
+    },
+    {
+      "id": "fill_teller_password",
+      "action": "fill_secret",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "main",
+        "caption": "Password:",
+        "row_key": "Password:",
+        "field_name": "p"
+      },
+      "strategy": "caption",
+      "confidence": "high",
+      "tried": [
+        "caption:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 392
+    },
+    {
+      "id": "click_sign_on",
+      "action": "click",
+      "actor": "automation",
+      "status": "failed",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "button",
+        "frame": "main",
+        "name": "Sign On"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [
+        "app_error",
+        "app_error"
+      ],
+      "dialogs": [],
+      "duration_ms": 0
+    },
+    {
+      "id": "human_1",
+      "action": "click",
+      "actor": "human",
+      "status": "ok",
+      "detail": "clicked link 'Member Inquiry' (main /main)",
+      "approved_by": null,
+      "matched": null,
+      "strategy": null,
+      "confidence": null,
+      "tried": [],
+      "attempts": 0,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 0
+    },
+    {
+      "id": "fill_member_number",
+      "action": "fill",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "work",
+        "caption": "Member #:",
+        "row_key": "Member #:",
+        "field_name": "q1"
+      },
+      "strategy": "caption",
+      "confidence": "high",
+      "tried": [
+        "caption:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 491
+    },
+    {
+      "id": "click_go",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "button",
+        "frame": "work",
+        "name": "Go"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 669
+    },
+    {
+      "id": "click_select",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "link",
+        "frame": "work",
+        "row_key": "12345",
+        "name": "Select"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 836
+    },
+    {
+      "id": "extract_savings_balance",
+      "action": "extract",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "text",
+        "role": "cell",
+        "frame": "work",
+        "col_header": "Balance",
+        "row_key": "0000"
+      },
+      "strategy": "table_cell",
+      "confidence": "high",
+      "tried": [
+        "table_cell:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 230
+    }
+  ],
+  "run_id": "20261018T234810-replay-member-savings-balance",
+  "started_at": "2026-10-19T03:48:10.957+00:00",
+  "duration_ms": 181188
+}

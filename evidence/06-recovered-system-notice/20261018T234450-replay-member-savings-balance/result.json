@@ -1,0 +1,215 @@
+{
+  "status": "success",
+  "capability": "member_savings_balance",
+  "version": "0.4.0",
+  "content_hash": "sha256:b549e39a36a41b1566033dc2ab61fcb29b1dc40d610b61012a0b38768fa7a533",
+  "outcome": null,
+  "tenant": "acme",
+  "tenant_note": "screen matches 'acme' (Acme Community Credit Union) signature 1.00",
+  "override": null,
+  "warnings": [],
+  "final_screen": {
+    "frames": {
+      "main": "/main",
+      "work": "/w/member/12345"
+    },
+    "headings": [
+      "main: Acme Community Credit Union | CoreLine Teller 7.4.2",
+      "main: Acme Community Credit Union",
+      "main: M. Officer",
+      "main: Functions » Member Inquiry » Sign Off",
+      "main: Functions",
+      "work: Member Summary",
+      "work: Member #:",
+      "work: Status:"
+    ]
+  },
+  "outputs": {
+    "savings_balance": "[REDACTED:output:savings_balance]"
+  },
+  "error": null,
+  "escalate": false,
+  "low_confidence_steps": [],
+  "interventions": [],
+  "control_history": [],
+  "steps": [
+    {
+      "id": "fill_teller_user",
+      "action": "fill_secret",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "main",
+        "caption": "User ID:",
+        "row_key": "User ID:",
+        "field_name": "u"
+      },
+      "strategy": "caption",
+      "confidence": "high",
+      "tried": [
+        "caption:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 476
+    },
+    {
+      "id": "fill_teller_password",
+      "action": "fill_secret",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "main",
+        "caption": "Password:",
+        "row_key": "Password:",
+        "field_name": "p"
+      },
+      "strategy": "caption",
+      "confidence": "high",
+      "tried": [
+        "caption:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 400
+    },
+    {
+      "id": "click_sign_on",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "button",
+        "frame": "main",
+        "name": "Sign On"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [
+        "system_notice"
+      ],
+      "dialogs": [],
+      "duration_ms": 1078
+    },
+    {
+      "id": "fill_member_number",
+      "action": "fill",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "textbox",
+        "frame": "work",
+        "caption": "Member #:",
+        "row_key": "Member #:",
+        "field_name": "q1"
+      },
+      "strategy": "caption",
+      "confidence": "high",
+      "tried": [
+        "caption:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 390
+    },
+    {
+      "id": "click_go",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "button",
+        "frame": "work",
+        "name": "Go"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [
+        "system_notice"
+      ],
+      "dialogs": [],
+      "duration_ms": 1005
+    },
+    {
+      "id": "click_select",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "control",
+        "role": "link",
+        "frame": "work",
+        "row_key": "12345",
+        "name": "Select"
+      },
+      "strategy": "role",
+      "confidence": "high",
+      "tried": [
+        "role:1"
+      ],
+      "attempts": 1,
+      "recovered": [
+        "system_notice"
+      ],
+      "dialogs": [],
+      "duration_ms": 1093
+    },
+    {
+      "id": "extract_savings_balance",
+      "action": "extract",
+      "actor": "automation",
+      "status": "ok",
+      "detail": null,
+      "approved_by": null,
+      "matched": {
+        "kind": "text",
+        "role": "cell",
+        "frame": "work",
+        "col_header": "Balance",
+        "row_key": "0000"
+      },
+      "strategy": "table_cell",
+      "confidence": "high",
+      "tried": [
+        "table_cell:1"
+      ],
+      "attempts": 1,
+      "recovered": [],
+      "dialogs": [],
+      "duration_ms": 198
+    }
+  ],
+  "run_id": "20261018T234450-replay-member-savings-balance",
+  "started_at": "2026-10-19T03:44:50.854+00:00",
+  "duration_ms": 10399
+}

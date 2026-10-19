@@ -1,0 +1,45 @@
+# Tenant registry (internal configuration - never shown to any model). No URLs: which
+# institution a run is talking to is decided from the application's first screen, by the
+# entry whose `identity` (default: `institution`) is shown there. When an institution is seen
+# for the first time it is added automatically, marked `auto_registered: true` for a human to
+# review (name, id). Credentials are resolved per run from the policy's logical secrets (a
+# per-tenant vault path in production; one shared .env for the local mock).
+tenants:
+  acme:
+    institution: Acme Community Credit Union
+    signature:
+      title: coreline teller - teller sign on
+      texts:
+      - acme community credit union
+      - acme community credit union coreline teller 7.4.2
+      - authorized use only. all activity is monitored.
+      - 'password:'
+      - sign on
+      - teller sign on
+      - 'user id:'
+  riverbend:
+    institution: Riverbend Federal Credit Union
+    signature:
+      title: coreline teller - staff login
+      texts:
+      - authorized use only. all activity is monitored.
+      - login
+      - 'operator:'
+      - 'pin / password:'
+      - riverbend federal credit union
+      - riverbend federal credit union coreline teller 7.6.0
+      - staff login
+  lakeside_savings_bank:
+    institution: Lakeside Savings Bank
+    identity: Lakeside Savings Bank
+    auto_registered: true
+    signature:
+      title: coreline teller - teller sign on
+      texts:
+      - authorized use only. all activity is monitored.
+      - lakeside savings bank
+      - lakeside savings bank coreline teller 7.4.2
+      - 'password:'
+      - sign on
+      - teller sign on
+      - 'user id:'
