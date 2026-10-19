@@ -36,9 +36,16 @@ pip install -r requirements.txt
 ```bash
 playwright install chromium
 ```
-Copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY`. Only discovery and the bank agent
-need it. The teller credentials in `.env` are the mock app's test accounts. In every new
-terminal, `cd` to the project folder and run `.venv\Scripts\Activate.ps1`.
+Create your `.env` from the template. Every run needs it, because replay signs on with the
+mock bank's test credentials stored there:
+```bash
+Copy-Item .env.example .env
+```
+Then open `.env` and put your Anthropic API key after `ANTHROPIC_API_KEY=`. Get one at
+https://console.anthropic.com/. Only discovery (step 3) and the bank agent use the key: replay
+and the tests run without it. `.env` is git-ignored, so the key never gets committed.
+
+In every new terminal, `cd` to the project folder and run `.venv\Scripts\Activate.ps1`.
 
 **2. Start the mock bank**, in its own terminal, and leave it running:
 ```bash

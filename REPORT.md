@@ -107,6 +107,19 @@ flowchart TB
 Stack: Python 3.13, Playwright (sync API, Chromium), Pydantic v2, and the Anthropic SDK. The
 LLM is `claude-opus-5-5`, with adaptive thinking and prompt caching.
 
+**Which LLMs it works with.** Today the system supports, and has been tested with, **only
+Anthropic's Claude models**. Everything that talks to a model goes through a single method,
+`respond(system, tools, messages)`, in [cua/llm.py](cua/llm.py). The discovery agent and the
+bank agent call only that. The test suite already runs both agents end to end against a
+scripted stand-in model, which shows the seam holds. Supporting another provider (OpenAI,
+Gemini, a local model) means a small adapter that translates three things: the tool
+definitions (the same JSON Schema under different field names), the message format (tool
+results and the screenshot image), and the response shape (tool call, text, stop reason,
+usage). Nothing else changes. Replay never uses an LLM, and redaction is applied before
+anything reaches the model, whichever provider it is. The real constraint is capability, not
+code: discovery needs reliable tool calling, one action per turn, and screenshot
+understanding. A weaker model would hit stuck detection, and so the human, more often.
+
 The discovery runs in the evidence are real LLM runs against the live mock:
 [01](evidence/README.md#01--discovery-of-a-read-flow) (a lookup),
 [11](evidence/README.md#11--discovery-of-a-write-flow-with-an-approval) (a write, with an
@@ -357,6 +370,8 @@ every action in both phases:
 - **Vault-backed, per-tenant secrets.** One `.env` serves the mock.
 - **Product-version checks.** A capability declares `versions: '>=7.4'`, but replay doesn't yet
   check the version shown on screen.
+- **Other LLM providers.** Only Claude is supported and tested. Other providers need a small
+  adapter behind `respond()` (section 1).
 - **Queues and services.**
 
 **What I'd build next:**
