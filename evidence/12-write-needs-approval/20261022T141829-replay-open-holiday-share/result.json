@@ -38,7 +38,7 @@
   "low_confidence_steps": [],
   "interventions": [
     {
-      "request_id": "int-26d73503",
+      "request_id": "int-129e79ef",
       "trigger": "approval_needed",
       "reason": "irreversible step requires a human decision",
       "step": "click_confirm",
@@ -70,7 +70,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 503
+      "duration_ms": 416
     },
     {
       "id": "fill_teller_password",
@@ -95,7 +95,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 417
+      "duration_ms": 373
     },
     {
       "id": "click_sign_on",
@@ -118,7 +118,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 716
+      "duration_ms": 617
     },
     {
       "id": "fill_member_number",
@@ -143,7 +143,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 516
+      "duration_ms": 445
     },
     {
       "id": "click_go",
@@ -166,7 +166,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 610
+      "duration_ms": 581
     },
     {
       "id": "click_select",
@@ -190,7 +190,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 702
+      "duration_ms": 590
     },
     {
       "id": "click_open_sub_account",
@@ -213,7 +213,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 622
+      "duration_ms": 597
     },
     {
       "id": "select_share_type",
@@ -238,7 +238,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 398
+      "duration_ms": 379
     },
     {
       "id": "fill_initial_deposit",
@@ -263,7 +263,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 417
+      "duration_ms": 388
     },
     {
       "id": "click_continue",
@@ -286,7 +286,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 557
+      "duration_ms": 567
     },
     {
       "id": "click_confirm",
@@ -305,7 +305,7 @@
       "duration_ms": 0
     }
   ],
-  "run_id": "20261019T001605-replay-open-holiday-share",
-  "started_at": "2026-10-19T04:16:05.245+00:00",
-  "duration_ms": 12093
+  "run_id": "20261022T141829-replay-open-holiday-share",
+  "started_at": "2026-10-22T18:18:29.137+00:00",
+  "duration_ms": 6114
 }

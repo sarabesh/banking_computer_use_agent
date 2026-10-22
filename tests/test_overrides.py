@@ -14,19 +14,21 @@ from cua.surface.web import WebSurface
 from .test_replay import capability, policy_for, serve  # noqa: F401 - module fixture reused
 
 
-def replay_at(cap, tmp_path, tenant, override_hash=None):
+def replay_at(cap, tmp_path, tenant, override_hash=None, allow_draft=False):
     _, server, base = serve(tenant)
     policy = policy_for(base)
     try:
         r = Replayer(WebSurface(policy, headless=True), policy, tmp_path, step_timeout=4, echo=lambda _: None)
-        return r.run(cap, {"member_number": "12345"}, base_url=base, tenant=tenant, override_hash=override_hash)
+        return r.run(cap, {"member_number": "12345"}, base_url=base, tenant=tenant, override_hash=override_hash,
+                     allow_draft=allow_draft)
     finally:
         server.shutdown()
 
 
 @pytest.fixture(scope="module")
 def riverbend_probe(capability, tmp_path_factory):  # noqa: F811
-    return replay_at(capability, tmp_path_factory.mktemp("probe"), "riverbend")
+    # Supervised, like `cua override suggest`: it carries on past weak matches to see them all.
+    return replay_at(capability, tmp_path_factory.mktemp("probe"), "riverbend", allow_draft=True)
 
 
 @pytest.fixture(scope="module")

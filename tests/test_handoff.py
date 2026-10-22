@@ -113,7 +113,8 @@ def test_session_expiry_handed_to_human_who_signs_in_again_then_replay_resumes(l
     assert secrets_env["password"] not in persisted
     request = json.loads((tmp_path / "inbox" / f"{intervention['request_id']}.request.json").read_text())
     assert request["capability"].startswith("member_savings_balance@") and request["step"] and request["screen"]["frames"]
-    assert Path(request["screenshot"]).exists()
+    assert not Path(request["screenshot"]).is_absolute()                 # no machine paths in evidence
+    assert (tmp_path / "inbox").parent.joinpath(request["screenshot"]).exists()
 
 
 @pytest.fixture

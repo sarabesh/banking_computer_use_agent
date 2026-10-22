@@ -1,0 +1,55 @@
+{
+  "id": "int-6a7356e2",
+  "created_at": "2026-10-22T18:17:56.735+00:00",
+  "run_id": "20261022T141752-replay-member-savings-balance",
+  "run_kind": "replay",
+  "capability": "member_savings_balance@0.4.0",
+  "goal": null,
+  "trigger": "unrecoverable",
+  "reason": "output 'savings_balance' was found only by a fallback after its primary locator missed",
+  "step": "extract_savings_balance",
+  "screen": {
+    "frames": {
+      "main": "/main",
+      "work": "/w/member/12345"
+    },
+    "headings": [
+      "main: Riverbend Federal Credit Union | CoreLine Teller 7.6.0",
+      "main: Riverbend Federal Credit Union",
+      "main: M. Officer",
+      "main: Functions » Account Lookup » Logout",
+      "main: Functions",
+      "work: Account Holder Detail"
+    ]
+  },
+  "screenshot": "20261022T141752-replay-member-savings-balance/intervention-1.jpg",
+  "recent_steps": [
+    {
+      "id": "click_go",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "strategy": "form_submit"
+    },
+    {
+      "id": "click_select",
+      "action": "click",
+      "actor": "automation",
+      "status": "ok",
+      "strategy": "row_control"
+    },
+    {
+      "id": "extract_savings_balance",
+      "action": "extract",
+      "actor": "automation",
+      "status": "failed",
+      "strategy": "css"
+    }
+  ],
+  "allowed": [
+    "take_control",
+    "resume",
+    "done",
+    "abort"
+  ]
+}

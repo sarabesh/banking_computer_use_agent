@@ -89,7 +89,7 @@ outcome, `4` needs approval, `1` failure.
 ```bash
 python -m pytest tests --basetemp=.pytest_tmp
 ```
-101 tests in about 9 minutes, with no API key. A scripted model stands in for the LLM, a
+106 tests in about 9 minutes, with no API key. A scripted model stands in for the LLM, a
 scripted operator for the human, and the mock app runs in-process. `--basetemp` is only
 needed where the system temp folder is locked down.
 
@@ -225,7 +225,10 @@ tenant `riverbend`, and that tenant's override is picked up, or created.
    result-row link are still found with high confidence, by **relational** locators. Because
    it drifted and Riverbend has no override yet, it ends with
    `Tenant override: drift detected. Draft written: ...riverbend.yaml`.
-   Unattended replays (without `--allow-draft`) never write files; they only report drift.
+   Unattended replays (without `--allow-draft`) never write files. Here, one also refuses to
+   answer: the balance is reachable only by a fallback, and an output is read only through
+   its primary locator, so it stops with `failed: low_confidence_output` rather than risk a
+   wrong number.
    `python -m cua override suggest ...` does the same on demand; add `--force` to redo a draft.
 2. Open `runs\demo-overrides\member_savings_balance\riverbend.yaml`. It holds only Riverbend's
    differences (three field captions, the `Current Bal` column, the screen title), pinned to

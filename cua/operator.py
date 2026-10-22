@@ -55,7 +55,10 @@ def run(args: argparse.Namespace) -> int:
         print(f"No request {args.request_id}.")
         return 2
     if args.command == "show":
-        print(json.dumps({"request": req.model_dump(), "status": inbox.status(req.id)}, indent=2))
+        shown = {"request": req.model_dump(), "status": inbox.status(req.id)}
+        if req.screenshot:      # stored relative to the runs folder, which holds the inbox
+            shown["screenshot_file"] = str((Path(args.inbox).parent / req.screenshot).resolve())
+        print(json.dumps(shown, indent=2))
         return 0
     action = {"take": "take_control", "dialog": f"dialog_{args.answer or 'dismiss'}"}.get(args.command, args.command)
     status = inbox.status(req.id)

@@ -7,9 +7,7 @@
   "tenant": "acme",
   "tenant_note": "screen matches 'acme' (Acme Community Credit Union) signature 1.00",
   "override": null,
-  "warnings": [
-    "success_text_not_shown: expected any of ['Share has been added to member {{member_number}}. Confirmation #:'] on the final screen"
-  ],
+  "warnings": [],
   "final_screen": {
     "frames": {
       "main": "/main",
@@ -23,13 +21,13 @@
       "main: Functions",
       "work: Share has been added to member 12345. Confirmation #:",
       "work: Sub-Account Opened",
-      "work: 0004",
-      "work: CU-40217732"
+      "work: 0003",
+      "work: CU-40217731"
     ]
   },
   "outputs": {
-    "new_share_suffix": "0004",
-    "confirmation_number": "CU-40217732"
+    "new_share_suffix": "0003",
+    "confirmation_number": "CU-40217731"
   },
   "error": null,
   "escalate": false,
@@ -39,12 +37,12 @@
   ],
   "interventions": [
     {
-      "request_id": "int-c3d48bb7",
+      "request_id": "int-bd65fe60",
       "decision": "approved",
       "operator": "sarab",
       "note": null,
       "human_actions": 0,
-      "waited_s": 157.3,
+      "waited_s": 10.2,
       "trigger": "approval_needed",
       "reason": "irreversible step requires a human decision",
       "step": "click_confirm"
@@ -56,14 +54,14 @@
       "to": "awaiting_human",
       "by": "automation",
       "reason": "approval_needed: irreversible step requires a human decision",
-      "at": "2026-10-19T04:16:49.298+00:00"
+      "at": "2026-10-22T18:18:52.581+00:00"
     },
     {
       "from": "awaiting_human",
       "to": "automation",
       "by": "sarab",
       "reason": "operator approved the step",
-      "at": "2026-10-19T04:19:26.638+00:00"
+      "at": "2026-10-22T18:19:02.778+00:00"
     }
   ],
   "steps": [
@@ -90,7 +88,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 475
+      "duration_ms": 394
     },
     {
       "id": "fill_teller_password",
@@ -115,7 +113,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 422
+      "duration_ms": 376
     },
     {
       "id": "click_sign_on",
@@ -138,7 +136,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 623
+      "duration_ms": 629
     },
     {
       "id": "fill_member_number",
@@ -163,7 +161,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 516
+      "duration_ms": 458
     },
     {
       "id": "click_go",
@@ -186,7 +184,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 598
+      "duration_ms": 550
     },
     {
       "id": "click_select",
@@ -210,7 +208,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 750
+      "duration_ms": 616
     },
     {
       "id": "click_open_sub_account",
@@ -233,7 +231,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 621
+      "duration_ms": 581
     },
     {
       "id": "select_share_type",
@@ -258,7 +256,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 397
+      "duration_ms": 381
     },
     {
       "id": "fill_initial_deposit",
@@ -283,7 +281,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 406
+      "duration_ms": 421
     },
     {
       "id": "click_continue",
@@ -306,7 +304,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 599
+      "duration_ms": 566
     },
     {
       "id": "click_confirm",
@@ -345,7 +343,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 460
+      "duration_ms": 422
     },
     {
       "id": "extract_new_share_suffix",
@@ -369,7 +367,7 @@
       "dialogs": [
         "confirm dialog 'Post new share to member account? This cannot be undone.' was accepted"
       ],
-      "duration_ms": 197
+      "duration_ms": 188
     },
     {
       "id": "extract_confirmation_number",
@@ -391,10 +389,10 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 190
+      "duration_ms": 196
     }
   ],
-  "run_id": "20261019T001638-replay-open-holiday-share",
-  "started_at": "2026-10-19T04:16:38.307+00:00",
-  "duration_ms": 169361
+  "run_id": "20261022T141846-replay-open-holiday-share",
+  "started_at": "2026-10-22T18:18:46.387+00:00",
+  "duration_ms": 17374
 }

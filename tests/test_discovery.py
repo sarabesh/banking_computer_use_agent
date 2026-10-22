@@ -95,7 +95,8 @@ def test_stuck_detection_escalates_with_context(tmp_path, live_app, policy, secr
     request = json.loads((result.run_dir / "intervention.json").read_text())
     assert request["trigger"] == "stuck" and "did not change the screen" in request["reason"]
     assert request["goal"] and request["step"] and request["screen"]["frames"]
-    assert Path(request["screenshot"]).exists()
+    assert not Path(request["screenshot"]).is_absolute()                     # no machine paths in evidence
+    assert (result.run_dir.parent / request["screenshot"]).exists()          # relative to the runs folder
 
 
 def test_covered_element_is_reported(tmp_path, live_app, policy, secrets_env):

@@ -187,7 +187,8 @@ Schema: [cua/artifact/schema.py](cua/artifact/schema.py).</sub>
   this member", "the submit button of the form I just filled". Weaker structural, `css` and
   position fallbacks follow. Each strategy has a fixed confidence (high / medium / low).
   Replay reports which one matched, so a fallback is **visible drift**, not a silent
-  guess (section 3).
+  guess. An **output** is read only through its primary locator; a fallback may find a
+  button, but never supply a value (section 3).
 - **Typed inputs and outputs, with no recorded values.** The compiler turns what the LLM typed
   into `{{input}}` templates in values, frame paths and row keys. Choices become enums, e.g.
   `share_type` in `open_holiday_share`, so the agent can't send an option that doesn't exist.
@@ -234,7 +235,7 @@ never pass as success:
 |---|---|---|
 | **Business outcome** | returns it as an answer: `record_not_found`, `invalid_search_input` | 04, 05 |
 | **Recoverable** | handles it within a limit, then carries on: dismiss the notice (≤ 3), reload a server error (≤ 2, *never after an irreversible step*); slowness is absorbed by the waits | 06, 07 |
-| **Hard failure** | stops: `recovery_exhausted`; `session_expired` (not re-authenticated, since re-running sign-on mid-flow isn't known to be safe); `permission_denied` escalates | 08, 09 |
+| **Hard failure** | stops: `recovery_exhausted`; `session_expired` (not re-authenticated, since re-running sign-on mid-flow isn't known to be safe); `permission_denied` escalates; `low_confidence_output` (see Drift) | 08, 09, 14 |
 | **Needs approval** | an irreversible step never runs unattended | 12 |
 
 Every failure names the error `kind`, the **step**, what was **expected** and what was
@@ -242,11 +243,15 @@ Every failure names the error `kind`, the **step**, what was **expected** and wh
 Exit codes 0 / 3 / 4 / 1 let a caller branch on the outcome.
 
 Unexpected dialogs are dismissed and recorded. An approved irreversible step accepts the
-app's own "are you sure?". A browser that dies mid-run gives a structured `session_lost`, not
-a crash.
+app's own "are you sure?". A browser that dies mid-run gives a structured `session_lost`, and
+an app that can't be reached gives `surface_error`, never a crash.
 
-**Drift**, the secondary concern, is never silent. A step found only by a fallback strategy is
-listed under `low_confidence_steps`, and a missing success text adds a warning (14).
+**Drift**, the secondary concern, can never produce a wrong answer. A step whose action still
+works through a fallback is listed under `low_confidence_steps`, and a missing success text
+adds a warning. An **output**, though, is read only through its primary, reviewed locator. If
+that misses and only a fallback matches, replay refuses with `low_confidence_output` and
+escalates (14). After a column reorder, a positional fallback would read the wrong amount, and
+a confident wrong number is worse than a failure.
 
 ## 4. Heterogeneity & multi-tenant
 
@@ -280,8 +285,10 @@ configured differently, so I don't re-record per tenant:
   automatically, for review (18).
 
 **Drift management, as it ran:**
-1. The base worked at Riverbend, but on fallbacks and with warnings (14).
-2. A supervised replay **generated a draft override** with exactly the differences (16).
+1. Unattended, the base **refused** to answer at Riverbend: its balance column was reachable
+   only by a fallback (14).
+2. A supervised probe ran it through, and **generated a draft override** with exactly the
+   differences (16).
 3. A human approved it, and every step was then high-confidence (17).
 4. After the base was recompiled, the old override was **refused** (`override_invalid`), not
    silently reused (15).

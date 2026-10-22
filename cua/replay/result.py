@@ -23,6 +23,7 @@ ErrorKind = Literal[
     "operator_rejected", "operator_aborted", "escalation_timeout", "resume_failed",   # human handoff
     "session_lost",          # the live browser was closed or crashed: nothing left to act on or hand over
     "override_invalid",      # the identified tenant's override does not fit this capability version
+    "low_confidence_output", # an output's primary locator missed and only a fallback matched: refused, may be wrong
 ]
 
 

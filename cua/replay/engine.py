@@ -88,6 +88,7 @@ class Replayer:
         """`cap` is the effective capability: the base, or the base with a tenant override applied
         (cua.artifact.overrides.apply_override). Replay itself never knows the difference."""
         self.cap = cap
+        self.supervised = allow_draft
         self.step_forms: dict[str, str | None] = {}
         self.warnings: list[str] = []
         self.tenant_note: str | None = None
@@ -275,7 +276,7 @@ class Replayer:
             path = self.log.path(f"intervention-{len(self.interventions) + 1}.jpg")
             try:
                 self.surface.screenshot(str(path), self.redactor.js_patterns, mask_data=True)
-                shot = str(path.resolve())
+                shot = Path(os.path.relpath(path, self.runs_dir)).as_posix()   # portable: no machine paths in evidence
             except Exception:  # noqa: BLE001 - evidence is best effort
                 pass
         reason = (stop.error.message if stop.error else stop.status) + (f" [{stop.outcome}]" if stop.outcome else "")
@@ -448,6 +449,18 @@ class Replayer:
             sr.attempts += 1
             el = res.element
             sr.matched = self._matched_facts(el)
+            primary = target.locators[0].by
+            if step.action == "extract" and res.strategy != primary and not self.supervised:
+                # An output is an answer someone acts on, so it is read only through the locator
+                # that was recorded and reviewed for it. If that misses and a fallback matches,
+                # the screen has drifted (e.g. columns reordered after an upgrade) and the
+                # fallback may be the wrong cell: refuse rather than return a confident wrong
+                # number. Supervised runs (--allow-draft) carry on, to suggest an override.
+                raise _Stop("failed", escalate=True, error=self._error(
+                    "low_confidence_output",
+                    f"output '{step.output}' was found only by a fallback after its primary locator missed",
+                    step=step.id, expected=f"primary locator '{primary}' to match",
+                    observed=f"only fallback '{res.strategy}' ({res.confidence}) matched"))
             self.step_forms[step.id] = el.form
             self._enforce_policy(step, el, approved=approved)
             try:
@@ -535,7 +548,8 @@ class Replayer:
         if missing := [o for o in s.outputs if o not in self.outputs]:
             raise _Stop("failed", error=self._error("success_check_failed", f"outputs not extracted: {missing}"))
         # Corroborating (any-of): a different title is a drift signal, not a failure.
-        if s.texts and len(missing_texts(s.texts, self.last_obs, focus)) == len(s.texts):
+        texts = [render(t, self.inputs) for t in s.texts]
+        if texts and len(missing_texts(texts, self.last_obs, focus)) == len(texts):
             warning = f"success_text_not_shown: expected any of {s.texts} on the final screen"
             self.warnings.append(warning)
             self.log.event("checkpoint_warning", warning=warning)

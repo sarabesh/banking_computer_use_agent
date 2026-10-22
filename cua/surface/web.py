@@ -119,7 +119,13 @@ class WebSurface:
         self.page.on("request", self._on_request_start)
         self.page.on("requestfinished", self._on_request_end)
         self.page.on("requestfailed", self._on_request_end)
-        self.page.goto(url, wait_until="load", timeout=self.load_timeout_ms)
+        try:
+            self.page.goto(url, wait_until="load", timeout=self.load_timeout_ms)
+        except PlaywrightError as exc:
+            # The app is down or not answering: an environment condition, reported as such
+            # (a structured result for the caller), not a crash.
+            reason = str(exc).splitlines()[0] if str(exc) else type(exc).__name__
+            raise ActionError("unreachable", f"could not open {url}: {reason}") from exc
 
     def _mark_lost(self, reason: str) -> None:
         if self._lost is None:

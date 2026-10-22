@@ -65,14 +65,14 @@ def capability(tmp_path_factory):
     return cap.model_copy(update={"status": "approved"})
 
 
-def replay(cap, tmp_path, member="12345", tenant="acme", setup=None, **faults):
+def replay(cap, tmp_path, member="12345", tenant="acme", setup=None, allow_draft=False, **faults):
     app, server, base = serve(tenant, **faults)
     try:
         if setup:
             setup(app)
         policy = policy_for(base)
         r = Replayer(WebSurface(policy, headless=True), policy, tmp_path, step_timeout=4, echo=lambda _: None)
-        return r.run(cap, {"member_number": member}, base_url=base), r.log.dir
+        return r.run(cap, {"member_number": member}, base_url=base, allow_draft=allow_draft), r.log.dir
     finally:
         server.shutdown()
 
@@ -141,12 +141,21 @@ def test_bad_inputs_rejected_before_touching_the_app(capability, tmp_path):
     assert "unknown inputs" in result.error.message
 
 
-def test_other_tenant_degrades_gracefully_with_no_tenant_knowledge(capability, tmp_path):
+def test_unreachable_app_is_a_structured_failure_not_a_crash(capability, tmp_path):
+    policy = policy_for("http://127.0.0.1:1")        # allowed, but nothing listens there
+    r = Replayer(WebSurface(policy, headless=True), policy, tmp_path, echo=lambda _: None)
+    result = r.run(capability, {"member_number": "12345"}, base_url="http://127.0.0.1:1")
+    assert result.status == "failed" and result.escalate
+    assert result.error.kind == "surface_error" and "could not open" in result.error.message
+
+
+def test_other_tenant_supervised_probe_reports_every_weak_step(capability, tmp_path):
     """Riverbend runs the same product with different labels and column order. The base
-    capability, unchanged: relational locators find the buttons and the row link whatever
-    they're called; captions and the balance column fall back to weaker strategies; the run
-    succeeds but reports exactly which steps were weak and that the screen title differs."""
-    result, _ = replay(capability, tmp_path, tenant="riverbend")
+    capability, unchanged, as a supervised probe (--allow-draft): relational locators find the
+    buttons and the row link whatever they're called; captions and the balance column fall back
+    to weaker strategies; the probe reports exactly which steps were weak and that the screen
+    title differs - the input for a suggested override."""
+    result, _ = replay(capability, tmp_path, tenant="riverbend", allow_draft=True)
     assert result.status == "success", result.error
     assert result.outputs == {"savings_balance": "1523.47"}
     strategies = {s.id: s.strategy for s in result.steps}
@@ -155,6 +164,58 @@ def test_other_tenant_degrades_gracefully_with_no_tenant_knowledge(capability, t
     assert strategies["fill_member_number"] == "field_name"      # caption 'Account Number:' differs
     assert result.low_confidence_steps == ["extract_savings_balance"]   # column 'Current Bal', reordered
     assert any(w.startswith("success_text_not_shown") for w in result.warnings)
+
+
+def test_unattended_replay_never_returns_an_output_from_a_fallback(capability, tmp_path):
+    """The same Riverbend run, unattended: the balance cell is found only by a CSS fallback,
+    so replay refuses to answer instead of returning a number that may be the wrong cell."""
+    result, run_dir = replay(capability, tmp_path, tenant="riverbend")
+    assert result.status == "failed" and result.escalate
+    assert result.error.kind == "low_confidence_output" and result.error.step == "extract_savings_balance"
+    assert "css" in result.error.observed and "table_cell" in result.error.expected
+    assert result.outputs == {}
+    assert (run_dir / result.error.screenshot).exists()
+
+
+def _drifted_columns(app):
+    """A vendor upgrade at this bank: 'Balance' is renamed and 'Available' moves into its
+    column slot - the case where a positional fallback would read the wrong amount."""
+    cfg = app.config["TENANT"]
+    cfg["labels"]["col_balance"] = "Ledger Bal"
+    cfg["account_columns"] = ["suffix", "type", "description", "available", "balance"]
+
+
+def test_drifted_columns_fail_closed_instead_of_returning_the_wrong_balance(capability, tmp_path):
+    result, _ = replay(capability, tmp_path, setup=_drifted_columns)
+    assert result.status == "failed" and result.error.kind == "low_confidence_output"
+    assert "1498.47" not in result.model_dump_json()     # the Available figure is never returned
+    # A supervised probe still runs to the end, so the drift can be seen and fixed by a person:
+    probe, _ = replay(capability, tmp_path / "probe", setup=_drifted_columns, allow_draft=True)
+    assert probe.status == "success" and probe.low_confidence_steps == ["extract_savings_balance"]
+
+
+def test_an_output_recorded_with_a_weak_primary_locator_still_runs(capability, tmp_path):
+    """Some values have nothing semantic to anchor on (e.g. a confirmation number in bare
+    text), so the reviewed capability's primary locator is structural. That is what was
+    approved - it is used, and reported as low confidence. Only a fallback is refused."""
+    data = capability.model_dump(mode="json")
+    extract = next(s for s in data["steps"] if s["action"] == "extract")
+    extract["target"]["locators"] = [loc for loc in extract["target"]["locators"] if loc["by"] == "css"]
+    cap = type(capability).model_validate(data)
+    result, _ = replay(cap, tmp_path)
+    assert result.status == "success", result.error
+    assert result.outputs == {"savings_balance": "1523.47"}
+    assert result.low_confidence_steps == ["extract_savings_balance"]
+
+
+def test_success_texts_are_filled_in_with_the_inputs(capability, tmp_path):
+    """A success text may contain {{input}} templates; it is checked as the user would read it."""
+    data = capability.model_dump(mode="json")
+    data["success"]["texts"] = ["{{member_number}}"]
+    cap = type(capability).model_validate(data)
+    result, _ = replay(cap, tmp_path)
+    assert result.status == "success", result.error
+    assert not any(w.startswith("success_text_not_shown") for w in result.warnings)
 
 
 def test_failure_snapshot_keeps_structure_not_data(capability, tmp_path):

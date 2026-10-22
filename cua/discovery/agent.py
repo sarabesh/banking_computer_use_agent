@@ -498,7 +498,7 @@ class DiscoveryAgent:
             trigger="approval_needed" if gate else "stuck", reason=self.log_redactor.text(f"{kind}: {reason}"),
             step=f"#{len(self.trace.steps)}",
             screen={"frames": dict(state.obs.location.frames), "headings": self.log_redactor.obj(state.obs.headings())},
-            screenshot=str(shot.resolve()),
+            screenshot=Path(os.path.relpath(shot, self.runs_dir)).as_posix(),
             recent_steps=[s.model_dump(include={"index", "action", "actor", "reason", "status", "detail"})
                           for s in self.trace.steps[-3:]],
             allowed=(["approve", "reject", "take_control", "resume", "abort"] if gate

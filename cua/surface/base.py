@@ -18,7 +18,8 @@ class ActionError(Exception):
     """An action could not be performed. `kind` lets callers react without string matching."""
 
     def __init__(self, kind: Literal["stale_ref", "not_found", "covered", "timeout", "not_editable",
-                                     "no_such_option", "blocked", "not_in_control", "session_lost", "other"],
+                                     "no_such_option", "blocked", "not_in_control", "session_lost",
+                                     "unreachable", "other"],
                  message: str):
         super().__init__(message)
         self.kind = kind

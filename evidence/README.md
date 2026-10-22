@@ -61,7 +61,7 @@ for the `.env` secrets and the 24 PII values in the seed data finds none.
 | 11 | Discovery: open a sub-account | trace, 13 steps, approved by human | Discovery of a write, approval gate |
 | 12 | Replay the write, no handoff | `needs_approval` | Irreversible step never auto-runs |
 | 13 | Replay the write, `--handoff` | `success` after approval | Human approves, automation posts |
-| 14 | Riverbend, base capability only | `success`, low confidence + warning | Graceful degradation, drift detected |
+| 14 | Riverbend, base capability only | `failed: low_confidence_output` | Drift fails closed: never a maybe-wrong output |
 | 15 | Riverbend, override for an old base | `failed: override_invalid` | Overrides pinned to a base hash |
 | 16 | Riverbend, supervised suggest | draft override written | Override generated automatically |
 | 17 | Riverbend, approved override | `success`, all high confidence | Cross-tenant reuse (stretch #5) |
@@ -185,11 +185,13 @@ Nothing is posted.
 
 ### 13 — The write capability, approved by a human
 The same command with `--handoff`. At Confirm the run paused (trigger `approval_needed`). The
-operator approved (`operator approve int-c3d48bb7`), the automation clicked Confirm, and the
-sub-account was opened: `success`, `new_share_suffix` and `confirmation_number` returned.
+operator approved (`operator approve int-bd65fe60`), the automation clicked Confirm, and the
+sub-account was opened: `success`, with no warnings, and `new_share_suffix` and
+`confirmation_number` returned.
 
-The two extract steps are flagged `low_confidence` (found by `css`), because the confirmation
-page puts its values in bare text with no label to anchor them.
+The two extract steps are flagged `low_confidence`. The confirmation page puts its values in
+bare text with no label to anchor them, so their recorded, reviewed primary locator is `css`.
+Replay reads an output only through its primary locator, so this is allowed, and reported.
 
 ---
 
@@ -201,14 +203,27 @@ the member screen.
 
 ### 14 — The Acme-discovered base, unchanged, at Riverbend
 ```bash
-python -m cua replay capabilities\member_savings_balance\0.4.0.yaml --base-url http://127.0.0.1:5002 --input member_number=12345 --runs-dir evidence\14-riverbend-base-only
+python -m cua replay capabilities\member_savings_balance\0.4.0.yaml --base-url http://127.0.0.1:5002 --input member_number=12345 --overrides <an empty folder> --runs-dir evidence\14-riverbend-base-only
 ```
-The first screen identifies `riverbend`, and its signature is recorded. All 7 steps still pass, through the
-fallback layers of each locator bundle: the captions don't match, so fields are found by
-`field_name` (medium), buttons and the result row by the relational `form_submit` and
-`row_control` locators (high), and the balance cell only by `css` (low). The result is `success`, but
-it says so: `low_confidence_steps: [extract_savings_balance]` and the warning that the final
-screen is not titled *Member Summary*. It degrades gracefully and reports the drift.
+An unattended replay, with no override (hence the empty `--overrides` folder). The first screen
+identifies `riverbend`. Six steps pass through the fallback layers of each locator bundle:
+- the captions don't match, so fields are found by `field_name` (medium);
+- buttons and the result row are found by the relational `form_submit` and `row_control`
+  locators (high).
+
+At `extract_savings_balance`, the primary locator (the cell in column *Balance*, row `0000`)
+finds nothing, because Riverbend calls the column *Current Bal*. Only the positional `css`
+fallback matches. An output is read **only through its primary locator**, so replay refuses
+to answer: `failed: low_confidence_output`, `escalate: true`, and no outputs.
+
+This is deliberate. The fallback happens to land on the right column at Riverbend, but after a
+reordering it could read *Available* instead of *Balance*, and that would be a confident,
+wrong number. The test suite reproduces that case
+(`test_drifted_columns_fail_closed_instead_of_returning_the_wrong_balance`). The drift is fixed
+by the next two steps: a supervised probe (16), then an approved override (17).
+
+*Re-recorded on 2026-10-22 after a post-submission review. The first recording returned
+`success` from the `css` fallback, with a low-confidence flag.*
 
 ### 15 — An override reviewed against an older base is refused
 Riverbend's override was still pinned to base 0.3.0 when the base moved to 0.4.0:

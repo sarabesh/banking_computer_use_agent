@@ -34,7 +34,7 @@ class InterventionRequest(BaseModel):
     reason: str
     step: str | None = None
     screen: dict = Field(default_factory=dict)        # frames + headings at the moment it stopped
-    screenshot: str | None = None                     # absolute path, redacted image
+    screenshot: str | None = None                     # redacted image, relative to the runs folder (the inbox's parent)
     recent_steps: list[dict] = Field(default_factory=list)
     allowed: list[OperatorAction]
 

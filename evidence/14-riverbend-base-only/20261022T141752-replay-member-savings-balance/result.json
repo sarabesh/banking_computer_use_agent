@@ -1,15 +1,13 @@
 {
-  "status": "success",
+  "status": "failed",
   "capability": "member_savings_balance",
   "version": "0.4.0",
   "content_hash": "sha256:b549e39a36a41b1566033dc2ab61fcb29b1dc40d610b61012a0b38768fa7a533",
   "outcome": null,
   "tenant": "riverbend",
-  "tenant_note": "screen matches 'riverbend' (Riverbend Federal Credit Union) signature 1.00; signature recorded",
+  "tenant_note": "screen matches 'riverbend' (Riverbend Federal Credit Union) signature 1.00",
   "override": null,
-  "warnings": [
-    "success_text_not_shown: expected any of ['Member Summary'] on the final screen"
-  ],
+  "warnings": [],
   "final_screen": {
     "frames": {
       "main": "/main",
@@ -26,15 +24,29 @@
       "work: Status:"
     ]
   },
-  "outputs": {
-    "savings_balance": "[REDACTED:output:savings_balance]"
+  "outputs": {},
+  "error": {
+    "kind": "low_confidence_output",
+    "message": "output 'savings_balance' was found only by a fallback after its primary locator missed",
+    "step": "extract_savings_balance",
+    "expected": "primary locator 'table_cell' to match",
+    "observed": "only fallback 'css' (low) matched",
+    "screenshot": "failure-extract_savings_balance.jpg",
+    "snapshot": "failure-extract_savings_balance.txt"
   },
-  "error": null,
-  "escalate": false,
+  "escalate": true,
   "low_confidence_steps": [
     "extract_savings_balance"
   ],
-  "interventions": [],
+  "interventions": [
+    {
+      "request_id": "int-6a7356e2",
+      "trigger": "unrecoverable",
+      "reason": "output 'savings_balance' was found only by a fallback after its primary locator missed",
+      "step": "extract_savings_balance",
+      "decision": "returned_to_caller"
+    }
+  ],
   "control_history": [],
   "steps": [
     {
@@ -61,7 +73,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 468
+      "duration_ms": 415
     },
     {
       "id": "fill_teller_password",
@@ -87,7 +99,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 402
+      "duration_ms": 376
     },
     {
       "id": "click_sign_on",
@@ -111,7 +123,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 701
+      "duration_ms": 618
     },
     {
       "id": "fill_member_number",
@@ -137,7 +149,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 512
+      "duration_ms": 441
     },
     {
       "id": "click_go",
@@ -161,7 +173,7 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 602
+      "duration_ms": 575
     },
     {
       "id": "click_select",
@@ -186,13 +198,13 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 1262
+      "duration_ms": 593
     },
     {
       "id": "extract_savings_balance",
       "action": "extract",
       "actor": "automation",
-      "status": "ok",
+      "status": "failed",
       "detail": null,
       "approved_by": null,
       "matched": {
@@ -211,10 +223,10 @@
       "attempts": 1,
       "recovered": [],
       "dialogs": [],
-      "duration_ms": 764
+      "duration_ms": 0
     }
   ],
-  "run_id": "20261019T002000-replay-member-savings-balance",
-  "started_at": "2026-10-19T04:20:00.566+00:00",
-  "duration_ms": 11046
+  "run_id": "20261022T141752-replay-member-savings-balance",
+  "started_at": "2026-10-22T18:17:52.365+00:00",
+  "duration_ms": 4374
 }
